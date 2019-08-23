@@ -7,7 +7,20 @@ include(CheckFunctionExists)
 
 enable_testing()
 
-find_package(OpenSSL 1.1.1 REQUIRED)
+find_package(OpenSSL REQUIRED)
+message(STATUS "Found OpenSSL ${OPENSSL_VERSION_MAJOR}.${OPENSSL_VERSION_MINOR}.${OPENSSL_VERSION_PATCH}.${OPENSSL_VERSION_TWEAK}")
+
+if (DEFINED OPENSSL_VERSION_MAJOR)
+   message(STATUS "OpenSSL Major version defined as ${OPENSSL_VERSION_MAJOR}")
+else()
+   message(STATUS "OpenSSL Major version NOT defined, setting to 3")
+   set(OPENSSL_VERSION_MAJOR "3")
+   set(OPENSSL_VERSION_MINOR "0")
+endif()
+
+message(STATUS "Found OpenSSL includes:   ${OPENSSL_INCLUDE_DIR}")
+message(STATUS "Found OpenSSL crypto lib: ${OPENSSL_CRYPTO_LIBRARY}")
+
 include_directories(${OPENSSL_INCLUDE_DIR})
 
 if (CMAKE_C_COMPILER_ID MATCHES "Clang")
@@ -212,7 +225,7 @@ set_property(TARGET ${BINARY_TESTS_TARGETS} APPEND PROPERTY COMPILE_DEFINITIONS 
 add_library(gost_core STATIC ${GOST_LIB_SOURCE_FILES})
 set_target_properties(gost_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-add_library(gost_engine SHARED ${GOST_ENGINE_SOURCE_FILES})
+add_library(gost_engine SHARED ${GOST_ENGINE_SOURCE_FILES} ${OPENSSL_CRYPTO_LIBRARY})
 set_target_properties(gost_engine PROPERTIES PREFIX "" OUTPUT_NAME "gost")
 set_target_properties(gost_engine PROPERTIES VERSION ${GOST_SOVERSION} SOVERSION ${GOST_SOVERSION})
 target_link_libraries(gost_engine gost_core ${OPENSSL_CRYPTO_LIBRARY})

@@ -18,6 +18,12 @@
 #include "gost_lcl.h"
 #include "e_gost_err.h"
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#define O_CONST const
+#else
+#define O_CONST
+#endif /* OPENSSL_VERSION */
+
 /* -----init, cleanup, copy - uniform for all algs  --------------*/
 /* Allocates new gost_pmeth_data structure and assigns it as data */
 static int pkey_gost_init(EVP_PKEY_CTX *ctx)
@@ -1049,7 +1055,7 @@ int register_pmeth_gost(int id, EVP_PKEY_METHOD **pmeth, int flags)
         EVP_PKEY_meth_set_keygen(*pmeth, NULL, pkey_gost_mac_keygen);
         EVP_PKEY_meth_set_init(*pmeth, pkey_gost_mac_init);
         EVP_PKEY_meth_set_cleanup(*pmeth, pkey_gost_mac_cleanup);
-        EVP_PKEY_meth_set_copy(*pmeth, (int (*)(EVP_PKEY_CTX *, EVP_PKEY_CTX *))pkey_gost_mac_copy);
+        EVP_PKEY_meth_set_copy(*pmeth, (int (*)(EVP_PKEY_CTX *, O_CONST EVP_PKEY_CTX *))pkey_gost_mac_copy);
         return 1;
     case NID_gost_mac_12:
         EVP_PKEY_meth_set_ctrl(*pmeth, pkey_gost_mac_ctrl,
@@ -1059,7 +1065,7 @@ int register_pmeth_gost(int id, EVP_PKEY_METHOD **pmeth, int flags)
         EVP_PKEY_meth_set_keygen(*pmeth, NULL, pkey_gost_mac_keygen_12);
         EVP_PKEY_meth_set_init(*pmeth, pkey_gost_mac_init);
         EVP_PKEY_meth_set_cleanup(*pmeth, pkey_gost_mac_cleanup);
-        EVP_PKEY_meth_set_copy(*pmeth, (int (*)(EVP_PKEY_CTX *, EVP_PKEY_CTX *))pkey_gost_mac_copy);
+        EVP_PKEY_meth_set_copy(*pmeth, (int (*)(EVP_PKEY_CTX *, O_CONST EVP_PKEY_CTX *))pkey_gost_mac_copy);
         return 1;
     case NID_magma_mac:
         EVP_PKEY_meth_set_ctrl(*pmeth, pkey_gost_magma_mac_ctrl,
@@ -1069,7 +1075,7 @@ int register_pmeth_gost(int id, EVP_PKEY_METHOD **pmeth, int flags)
         EVP_PKEY_meth_set_keygen(*pmeth, NULL, pkey_gost_magma_mac_keygen);
         EVP_PKEY_meth_set_init(*pmeth, pkey_gost_magma_mac_init);
         EVP_PKEY_meth_set_cleanup(*pmeth, pkey_gost_mac_cleanup);
-        EVP_PKEY_meth_set_copy(*pmeth, (int (*)(EVP_PKEY_CTX *, EVP_PKEY_CTX *))pkey_gost_mac_copy);
+        EVP_PKEY_meth_set_copy(*pmeth, (int (*)(EVP_PKEY_CTX *, O_CONST EVP_PKEY_CTX *))pkey_gost_mac_copy);
         return 1;
     case NID_grasshopper_mac:
     case NID_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm_omac: /* FIXME beldmit */
@@ -1080,7 +1086,7 @@ int register_pmeth_gost(int id, EVP_PKEY_METHOD **pmeth, int flags)
         EVP_PKEY_meth_set_keygen(*pmeth, NULL, pkey_gost_grasshopper_mac_keygen);
         EVP_PKEY_meth_set_init(*pmeth, pkey_gost_grasshopper_mac_init);
         EVP_PKEY_meth_set_cleanup(*pmeth, pkey_gost_mac_cleanup);
-        EVP_PKEY_meth_set_copy(*pmeth, (int (*)(EVP_PKEY_CTX *, EVP_PKEY_CTX *))pkey_gost_mac_copy);
+        EVP_PKEY_meth_set_copy(*pmeth, (int (*)(EVP_PKEY_CTX *, O_CONST EVP_PKEY_CTX *))pkey_gost_mac_copy);
         return 1;
     default:                   /* Unsupported method */
         return 0;
@@ -1088,7 +1094,7 @@ int register_pmeth_gost(int id, EVP_PKEY_METHOD **pmeth, int flags)
     EVP_PKEY_meth_set_init(*pmeth, pkey_gost_init);
     EVP_PKEY_meth_set_cleanup(*pmeth, pkey_gost_cleanup);
 
-    EVP_PKEY_meth_set_copy(*pmeth, (int (*)(EVP_PKEY_CTX *, EVP_PKEY_CTX *))pkey_gost_copy);
+    EVP_PKEY_meth_set_copy(*pmeth, (int (*)(EVP_PKEY_CTX *, O_CONST EVP_PKEY_CTX *))pkey_gost_copy);
     /*
      * FIXME derive etc...
      */

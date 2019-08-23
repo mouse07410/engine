@@ -10,6 +10,13 @@ enable_testing()
 find_package(OpenSSL 1.1.1 REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
+if(NOT DEFINED ${OPENSSL_VERSION_MAJOR})
+   set(OPENSSL_VERSION_MAJOR "3")
+   set(OPENSSL_VERSION_MINOR "0")
+endif(NOT DEFINED ${OPENSSL_VERSION_MAJOR})
+message(STATUS "Found OpenSSL-${OPENSSL_VERSION_MAJOR}.${OPENSSL_VERSION_MINOR} includes in ${OPENSSL_INCLUDE_DIR}")
+
+
 if (CMAKE_C_COMPILER_ID MATCHES "Clang")
  add_compile_options(-O2 -Werror -Wall -Wno-unused-parameter -Wno-unused-function -Wno-missing-braces -ggdb -Qunused-arguments)
 elseif(CMAKE_C_COMPILER_ID MATCHES "GNU")

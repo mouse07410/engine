@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use TAP::Harness;
 
 if(defined $ENV{'OPENSSL_ROOT_DIR'}) {
@@ -44,5 +44,9 @@ if(defined $ENV{'OPENSSL_ROOT_DIR'}) {
     $ENV{'PATH'} =
         join(':', $openssl_bindir, split(/:/, $ENV{'PATH'}));
 }
+
+print STDERR "Dumping env vars from test/run_tests\n";
+print STDERR "# $_=$ENV{$_}\n" foreach (sort keys %ENV);
+
 my $harness = TAP::Harness->new();
 exit ($harness->runtests(glob("*.t"))->all_passed() ? 0 : 1);

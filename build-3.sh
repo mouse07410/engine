@@ -6,10 +6,14 @@
 if [ -z ${OPENSSL_DIR} ]; then
     # Assume we are building for OpenSSL-3 (current master)
     OPENSSL_DIR="$HOME/openssl-3"
+    OPENSSL_ROOT_DIR="$HOME/openssl-3"
     OPENSSL_ENGINES_DIR="${OPENSSL_DIR}/lib/engines-3"
 else
     # Assume we're building for stable OpenSSL-1.1.1x
     OPENSSL_ENGINES_DIR="${OPENSSL_DIR}/lib/engines-1.1"
+fi
+if [ -z ${OPENSSL_ROOT_DIR} ]; then
+    OPENSSL_ROOT_DIR=${OPENSSL_DIR}
 fi
 
 OPENSSL_INCLUDE_DIR="${OPENSSL_DIR}/include"
@@ -26,9 +30,10 @@ mkdir -p build
 
 cd build
 
-cmake .. -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DOPENSSL_ENGINES_DIR=${OPENSSL_ENGINES_DIR} 2>&1 | tee ../cmake-out.txt
+cmake .. -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR} -DOPENSSL_ENGINES_DIR=${OPENSSL_ENGINES_DIR} 2>&1 | tee ../cmake-out.txt
 make VERBOSE=1 2>&1 | tee ../make-out.txt
 
 make test 2>&1 | tee ../test-out.txt
+make test ARGS='-V' 2>&1 | tee ../test-long-out.txt
 
 #

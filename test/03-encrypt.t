@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use Test2::V0;
 plan(48);
 use Cwd 'abs_path';

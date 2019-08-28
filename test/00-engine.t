@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use Test2::V0;
 plan(7);
 use Cwd 'abs_path';
@@ -42,6 +42,11 @@ $engine_info= <<EOINF;
 EOINF
 }
 
+note "PATH=$ENV{PATH}";
+note "DYLD_LIBRARY_PATH=$ENV{DYLD_LIBRARY_PATH}";
+note `which openssl`;
+note `openssl version`;
+
 $ENV{'OPENSSL_CONF'}=abs_path("no_such_file.cfg");
 is(`openssl engine -c $engine`,
 $engine_info,
@@ -82,5 +87,5 @@ like(`openssl ciphers`, qr|GOST2001-GOST89-GOST89|, 'display GOST2001-GOST89-GOS
 
 like(`openssl ciphers`, qr|GOST2012-GOST8912-GOST8912|, 'display GOST2012-GOST8912-GOST8912 cipher');
 
-unlink('testdata.dat');
-unlink('test.cnf');
+# unlink('testdata.dat');
+# unlink('test.cnf');

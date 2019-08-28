@@ -48,5 +48,7 @@ if(defined $ENV{'OPENSSL_ROOT_DIR'}) {
 print STDERR "Dumping env vars from test/run_tests\n";
 print STDERR "# $_=$ENV{$_}\n" foreach (sort keys %ENV);
 
-my $harness = TAP::Harness->new();
+my $harness = TAP::Harness->new({
+    verbosity => (($ENV{CTEST_INTERACTIVE_DEBUG_MODE} // 0) != 0)
+});
 exit ($harness->runtests(glob("*.t"))->all_passed() ? 0 : 1);

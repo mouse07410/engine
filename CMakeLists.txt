@@ -10,6 +10,8 @@ enable_testing()
 find_package(OpenSSL 1.1.1 REQUIRED)
 message(STATUS "Found OpenSSL ${OPENSSL_VERSION_MAJOR}.${OPENSSL_VERSION_MINOR}.${OPENSSL_VERSION_PATCH}.${OPENSSL_VERSION_TWEAK}")
 
+message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+
 if(NOT DEFINED OPENSSL_VERSION_MAJOR)
    message(STATUS "OpenSSL version values were not properly defined (OpenSSL-3 issue), setting to 3.0")
    set(OPENSSL_VERSION_MAJOR "3")
@@ -18,6 +20,11 @@ endif(NOT DEFINED OPENSSL_VERSION_MAJOR)
 
 message(STATUS "Found OpenSSL includes:   ${OPENSSL_INCLUDE_DIR}")
 message(STATUS "Found OpenSSL crypto lib: ${OPENSSL_CRYPTO_LIBRARY}")
+
+set(CMAKE_C_FLAGS_DEBUG "-g -march=native -std=gnu17")
+set(CMAKE_C_FLAGS_MINSIZEREL "-Os -march=native -std=gnu17")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Os -Ofast -g -march=native -std=gnu17")
+set(CMAKE_C_FLAGS_RELEASE "-Os -Ofast -march=native -std=gnu17")
 
 include_directories(${OPENSSL_INCLUDE_DIR})
 

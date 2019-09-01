@@ -31,7 +31,7 @@ OPENSSL_INCLUDE_DIR="${OPENSSL_DIR}/include"
 OPENSSL_CRYPTO_LIBRARY="${OPENSSL_DIR}/lib/libcrypto.dylib"
 OPENSSL_SSL_LIBRARY="${OPENSSL_DIR}/lib/libssl.dylib" 
 PKG_CONFIG_PATH="${OPENSSL_DIR}/lib/pkgconfig:${PKG_CONFIG_PATH}" 
-OPENSSL_CFLAGS="${MY_CFLAGS} -march=native -std=gnu17" 
+OPENSSL_CFLAGS="-march=native -std=gnu17" 
 OPENSSL_LIB_DIR="${OPENSSL_DIR}/lib"
 OPENSSL_CONF="${OPENSSL_DIR}/etc/openssl.cnf"
 

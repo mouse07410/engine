@@ -3,7 +3,9 @@
 #include <openssl/conf.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
-
+#if defined(DEBUG)
+#include <stdio.h>
+#endif /* DEBUG */
 #include "e_gost_err.h"
 #include "gost_lcl.h"
 
@@ -77,15 +79,27 @@ int omac_imit_final(EVP_MD_CTX *ctx, unsigned char *md)
     OMAC_CTX *c = EVP_MD_CTX_md_data(ctx);
     unsigned char mac[MAX_GOST_OMAC_SIZE];
     size_t mac_size = sizeof(mac);
+    int required_mac_size = EVP_MD_CTX_size(ctx);
 
     if (!c->key_set) {
         GOSTerr(GOST_F_OMAC_IMIT_FINAL, GOST_R_MAC_KEY_NOT_SET);
         return 0;
     }
-
+#if defined(DEBUG)
+    printf("%s:%d mac_size=%lu ctx_md_size=%d\n",
+           __FILE__, __LINE__, mac_size, EVP_MD_CTX_size(ctx));
+    fflush(stdout);
+#endif /* DEBUG */
     CMAC_Final(c->cmac_ctx, mac, &mac_size);
-
-    memcpy(md, mac, c->dgst_size);
+    if (mac_size > (EVP_MD_CTX_size(ctx)))
+	    mac_size = EVP_MD_CTX_size(ctx);
+    //memcpy(md, mac, c->dgst_size);
+    memcpy(md, mac, required_mac_size);
+#if defined(DEBUG)
+    printf("%s:%d mac_size=%lu ctx_md_size=%d\n",
+           __FILE__, __LINE__, mac_size, EVP_MD_CTX_size(ctx));
+    fflush(stdout);           
+#endif /* DEBUG */
     return 1;
 }
 
@@ -93,7 +107,10 @@ int omac_imit_copy(EVP_MD_CTX *to, const EVP_MD_CTX *from)
 {
     OMAC_CTX *c_to = EVP_MD_CTX_md_data(to);
     const OMAC_CTX *c_from = EVP_MD_CTX_md_data(from);
-
+#if defined(DEBUG)
+    printf("%s:%d c_from->dgst_size=%lu c_to->dgst_size=%lu\n",
+        __FILE__, __LINE__, c_from->dgst_size, c_to->dgst_size);
+#endif /* DEBUG */
     if (c_from && c_to) {
         c_to->dgst_size = c_from->dgst_size;
         c_to->cipher_nid = c_from->cipher_nid;
@@ -221,6 +238,7 @@ int omac_imit_ctrl(EVP_MD_CTX *ctx, int type, int arg, void *ptr)
                 c->dgst_size = arg;
                 break;
             default:
+             GOSTerr(GOST_F_OMAC_IMIT_CTRL, GOST_R_CIPHER_NOT_FOUND);
                 return 0;
             }
             return 1;

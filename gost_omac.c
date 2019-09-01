@@ -79,25 +79,25 @@ int omac_imit_final(EVP_MD_CTX *ctx, unsigned char *md)
     OMAC_CTX *c = EVP_MD_CTX_md_data(ctx);
     unsigned char mac[MAX_GOST_OMAC_SIZE];
     size_t mac_size = sizeof(mac);
-    int required_mac_size = EVP_MD_CTX_size(ctx);
 
     if (!c->key_set) {
         GOSTerr(GOST_F_OMAC_IMIT_FINAL, GOST_R_MAC_KEY_NOT_SET);
         return 0;
     }
+    memset(mac, 0x0, MAX_GOST_OMAC_SIZE);
 #if defined(DEBUG)
-    printf("%s:%d mac_size=%lu ctx_md_size=%d\n",
-           __FILE__, __LINE__, mac_size, EVP_MD_CTX_size(ctx));
+    printf("%s:%d mac_size=%lu c->dgst_size=%lu ctx_md_size=%d\n",
+           __FILE__, __LINE__, mac_size, c->dgst_size, EVP_MD_CTX_size(ctx));
     fflush(stdout);
 #endif /* DEBUG */
+    mac_size = EVP_MD_CTX_size(ctx);
     CMAC_Final(c->cmac_ctx, mac, &mac_size);
     if (mac_size > (EVP_MD_CTX_size(ctx)))
 	    mac_size = EVP_MD_CTX_size(ctx);
-    //memcpy(md, mac, c->dgst_size);
-    memcpy(md, mac, required_mac_size);
+    memcpy(md, mac, mac_size);
 #if defined(DEBUG)
-    printf("%s:%d mac_size=%lu ctx_md_size=%d\n",
-           __FILE__, __LINE__, mac_size, EVP_MD_CTX_size(ctx));
+    printf("%s:%d mac_size=%lu c->dgst_size=%lu ctx_md_size=%d\n",
+           __FILE__, __LINE__, mac_size, c->dgst_size, EVP_MD_CTX_size(ctx));
     fflush(stdout);           
 #endif /* DEBUG */
     return 1;

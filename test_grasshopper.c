@@ -334,9 +334,11 @@ static int test_mac(const char *name, const char *from,
 {
     EVP_MD_CTX *ctx = EVP_MD_CTX_new();
     unsigned char md_value[EVP_MAX_MD_SIZE];
-    unsigned int md_len;
-    int test;
+    unsigned int md_len = mac_size;
+    int test = 0;
 
+	memset(md_value, 0x0, EVP_MAX_MD_SIZE);
+	
     OPENSSL_assert(ctx);
     printf("%s test from %s\n", name, from);
     EVP_MD_CTX_init(ctx);
@@ -344,7 +346,8 @@ static int test_mac(const char *name, const char *from,
     if (EVP_MD_CTX_size(ctx) != mac_size) {
 	/* strip const out of EVP_MD_CTX_md() to
 	 * overwrite output size, as test vector is 8 bytes */
-	printf("Resize result size from %d to %zu\n", EVP_MD_CTX_size(ctx), mac_size);
+	printf("Resize result size from %d to %zu (mdsize=%d)\n", 
+			EVP_MD_CTX_size(ctx), mac_size, EVP_MD_size(EVP_MD_CTX_md(ctx)));
 	T(EVP_MD_meth_set_result_size((EVP_MD *)EVP_MD_CTX_md(ctx), mac_size));
     }
     T(EVP_MD_meth_get_ctrl(EVP_MD_CTX_md(ctx))(ctx, EVP_MD_CTRL_SET_KEY, sizeof(K), (void *)K));

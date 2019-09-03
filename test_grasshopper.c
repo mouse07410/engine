@@ -337,7 +337,7 @@ static int test_mac(const char *name, const char *from,
     unsigned int md_len = mac_size;
     int test = 0;
 
-	memset(md_value, 0x0, EVP_MAX_MD_SIZE);
+    memset(md_value, 0x0, EVP_MAX_MD_SIZE);
 	
     OPENSSL_assert(ctx);
     printf("%s test from %s\n", name, from);

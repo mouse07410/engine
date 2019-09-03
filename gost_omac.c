@@ -85,21 +85,21 @@ int omac_imit_final(EVP_MD_CTX *ctx, unsigned char *md)
         return 0;
     }
     memset(mac, 0x0, MAX_GOST_OMAC_SIZE);
-//#if defined(DEBUG)
-    printf("%s:%d mac_size=%lu c->dgst_size=%lu ctx_md_size=%d\n",
+#if defined(DEBUG)
+    printf("%s:%d mac_size=%lu \tc->dgst_size=%lu \tctx_md_size=%d\n",
            __FILE__, __LINE__, mac_size, c->dgst_size, EVP_MD_CTX_size(ctx));
     fflush(stdout);
-//#endif /* DEBUG */
+#endif /* DEBUG */
     mac_size = EVP_MD_CTX_size(ctx);
     CMAC_Final(c->cmac_ctx, mac, &mac_size);
     if (mac_size > (EVP_MD_CTX_size(ctx)))
 	    mac_size = EVP_MD_CTX_size(ctx);
     memcpy(md, mac, mac_size);
-//#if defined(DEBUG)
-    printf("%s:%d mac_size=%lu c->dgst_size=%lu ctx_md_size=%d\n",
+#if defined(DEBUG)
+    printf("%s:%d mac_size=%lu \tc->dgst_size=%lu \tctx_md_size=%d\n",
            __FILE__, __LINE__, mac_size, c->dgst_size, EVP_MD_CTX_size(ctx));
     fflush(stdout);           
-//#endif /* DEBUG */
+#endif /* DEBUG */
     return 1;
 }
 
@@ -108,7 +108,7 @@ int omac_imit_copy(EVP_MD_CTX *to, const EVP_MD_CTX *from)
     OMAC_CTX *c_to = EVP_MD_CTX_md_data(to);
     const OMAC_CTX *c_from = EVP_MD_CTX_md_data(from);
 #if defined(DEBUG)
-    printf("%s:%d c_from->dgst_size=%lu c_to->dgst_size=%lu\n",
+    printf("%s:%d copying c_from->dgst_size=%lu c_to->dgst_size=%lu\n",
         __FILE__, __LINE__, c_from->dgst_size, c_to->dgst_size);
 #endif /* DEBUG */
     if (c_from && c_to) {
@@ -165,6 +165,10 @@ static int omac_key(OMAC_CTX * c, const EVP_CIPHER *cipher,
 
 int omac_imit_ctrl(EVP_MD_CTX *ctx, int type, int arg, void *ptr)
 {
+#if defined(DEBUG)
+    printf("%s:%d omac_imit_ctrl(): type=0x%x  arg=%d\n", __FILE__, __LINE__, type, arg);
+    fflush(stdout);
+#endif /* DEBUG */
     switch (type) {
     case EVP_MD_CTRL_KEY_LEN:
         *((unsigned int *)(ptr)) = 32;

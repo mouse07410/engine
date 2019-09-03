@@ -349,17 +349,18 @@ static int test_mac(const char *name, const char *from,
 	printf("Resize result size from %d to %zu (mdsize=%d)\n", 
 			EVP_MD_CTX_size(ctx), mac_size, EVP_MD_size(EVP_MD_CTX_md(ctx)));
 	T(EVP_MD_meth_set_result_size((EVP_MD *)EVP_MD_CTX_md(ctx), mac_size));
+	md_len = mac_size;
     }
     T(EVP_MD_meth_get_ctrl(EVP_MD_CTX_md(ctx))(ctx, EVP_MD_CTRL_SET_KEY, sizeof(K), (void *)K));
     if (acpkm)
 	T(EVP_MD_meth_get_ctrl(EVP_MD_CTX_md(ctx))(ctx,
                 EVP_CTRL_KEY_MESH, acpkm, acpkm_t ? &acpkm_t : NULL));
     T(EVP_DigestUpdate(ctx, pt, pt_size));
-    printf("Digest size before final: MD_CTX_size=%d mac_size=%zu EVP_MD_size=%d\n", 
-           EVP_MD_CTX_size(ctx), mac_size, EVP_MD_size(EVP_MD_CTX_md(ctx)));
+    printf("Digest size before final: MD_CTX_size=%d mac_size=%zu EVP_MD_size=%d md_len=%u\n", 
+           EVP_MD_CTX_size(ctx), mac_size, EVP_MD_size(EVP_MD_CTX_md(ctx)), md_len);
     T(EVP_DigestFinal_ex(ctx, md_value, &md_len));
-    printf("Digest size after final:  MD_CTX_size=%d mac_size=%zu EVP_MD_size=%d\n", 
-           EVP_MD_CTX_size(ctx), mac_size, EVP_MD_size(EVP_MD_CTX_md(ctx)));
+    printf("Digest size after final:  MD_CTX_size=%d mac_size=%zu EVP_MD_size=%d md_len=%u\n", 
+           EVP_MD_CTX_size(ctx), mac_size, EVP_MD_size(EVP_MD_CTX_md(ctx)), md_len);
     EVP_MD_CTX_free(ctx);
     printf("  MAC[%u] = ", md_len);
     hexdump(md_value, md_len);

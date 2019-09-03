@@ -85,21 +85,21 @@ int omac_imit_final(EVP_MD_CTX *ctx, unsigned char *md)
         return 0;
     }
     memset(mac, 0x0, MAX_GOST_OMAC_SIZE);
-#if defined(DEBUG)
+//#if defined(DEBUG)
     printf("%s:%d mac_size=%lu c->dgst_size=%lu ctx_md_size=%d\n",
            __FILE__, __LINE__, mac_size, c->dgst_size, EVP_MD_CTX_size(ctx));
     fflush(stdout);
-#endif /* DEBUG */
+//#endif /* DEBUG */
     mac_size = EVP_MD_CTX_size(ctx);
     CMAC_Final(c->cmac_ctx, mac, &mac_size);
     if (mac_size > (EVP_MD_CTX_size(ctx)))
 	    mac_size = EVP_MD_CTX_size(ctx);
     memcpy(md, mac, mac_size);
-#if defined(DEBUG)
+//#if defined(DEBUG)
     printf("%s:%d mac_size=%lu c->dgst_size=%lu ctx_md_size=%d\n",
            __FILE__, __LINE__, mac_size, c->dgst_size, EVP_MD_CTX_size(ctx));
     fflush(stdout);           
-#endif /* DEBUG */
+//#endif /* DEBUG */
     return 1;
 }
 

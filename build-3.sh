@@ -16,15 +16,23 @@ if [ -z ${OPENSSL_DIR} ]; then
     OPENSSL_DIR="$HOME/openssl-3"
     OPENSSL_ENGINES_DIR="${OPENSSL_DIR}/lib/engines-3"
     THREE="-3-"
-    CMAKE_BUILD_TYPE=Debug
 else
     # Assume we're building for stable OpenSSL-1.1.1x
     OPENSSL_ENGINES_DIR="${OPENSSL_DIR}/lib/engines-1.1"
     THREE="-"
     CMAKE_BUILD_TYPE=Release
 fi
+
 if [ -z ${OPENSSL_ROOT_DIR} ]; then
     OPENSSL_ROOT_DIR=${OPENSSL_DIR}
+fi
+
+if [ -z ${DEBUG+x} ]; then
+    # DEBUG not set, building Release
+    CMAKE_BUILD_TYPE=Release
+else
+    # Since env var DEBUG was set, build type is Debug
+    CMAKE_BUILD_TYPE=Debug
 fi
 
 OPENSSL_INCLUDE_DIR="${OPENSSL_DIR}/include"

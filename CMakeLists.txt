@@ -21,7 +21,7 @@ endif(NOT DEFINED OPENSSL_VERSION_MAJOR)
 message(STATUS "Found OpenSSL includes:   ${OPENSSL_INCLUDE_DIR}")
 message(STATUS "Found OpenSSL crypto lib: ${OPENSSL_CRYPTO_LIBRARY}")
 
-set(CMAKE_C_FLAGS_DEBUG "-g -march=native -std=gnu17")
+set(CMAKE_C_FLAGS_DEBUG "-DDEBUG -g -march=native -std=gnu17")
 set(CMAKE_C_FLAGS_MINSIZEREL "-Os -march=native -std=gnu17")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Os -Ofast -g -march=native -std=gnu17")
 set(CMAKE_C_FLAGS_RELEASE "-Os -Ofast -march=native -std=gnu17")

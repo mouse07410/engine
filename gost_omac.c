@@ -90,11 +90,8 @@ int omac_imit_final(EVP_MD_CTX *ctx, unsigned char *md)
            __FILE__, __LINE__, mac_size, c->dgst_size, EVP_MD_CTX_size(ctx));
     fflush(stdout);
 #endif /* DEBUG */
-    mac_size = EVP_MD_CTX_size(ctx);
     CMAC_Final(c->cmac_ctx, mac, &mac_size);
-    if (mac_size > (EVP_MD_CTX_size(ctx)))
-	    mac_size = EVP_MD_CTX_size(ctx);
-    memcpy(md, mac, mac_size);
+    memcpy(md, mac, c->dgst_size);
 #if defined(DEBUG)
     printf("%s:%d mac_size=%lu \tc->dgst_size=%lu \tctx_md_size=%d\n",
            __FILE__, __LINE__, mac_size, c->dgst_size, EVP_MD_CTX_size(ctx));

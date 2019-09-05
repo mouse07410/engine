@@ -343,34 +343,17 @@ static int test_mac(const char *name, const char *from,
     printf("%s test from %s\n", name, from);
     EVP_MD_CTX_init(ctx);
     T(EVP_DigestInit_ex(ctx, type, NULL));
-/*     if (EVP_MD_CTX_size(ctx) != mac_size) { */
-/* 	/\* strip const out of EVP_MD_CTX_md() to */
-/* 	 * overwrite output size, as test vector is 8 bytes *\/ */
-/* 	printf("Resize result size from %d to %zu (mdsize=%d)\n",  */
-/* 			EVP_MD_CTX_size(ctx), mac_size, EVP_MD_size(EVP_MD_CTX_md(ctx))); */
-/* 	T(EVP_MD_meth_set_result_size((EVP_MD *)EVP_MD_CTX_md(ctx), mac_size)); */
-/* #if OPENSSL_VERSION_NUMBER >= 0x30000000L */
-/* 	T(EVP_MD_meth_get_ctrl(EVP_MD_CTX_md(ctx))(ctx, EVP_MD_CTRL_MAC_LEN, mac_size, NULL)); */
-/* #endif /\* OpenSSL-3 *\/ */
-/*     } */
-/*     T(EVP_MD_meth_get_ctrl(EVP_MD_CTX_md(ctx))(ctx, EVP_MD_CTRL_SET_KEY, sizeof(K), (void *)K)); */
     T(EVP_MD_CTX_ctrl(ctx, EVP_MD_CTRL_SET_KEY, sizeof(K), (void *)K));
     if (acpkm)
-	T(EVP_MD_CTX_ctrl(ctx, EVP_CTRL_KEY_MESH, acpkm, acpkm_t ? &acpkm_t : NULL));
+         T(EVP_MD_CTX_ctrl(ctx, EVP_CTRL_KEY_MESH, acpkm, acpkm_t ? &acpkm_t : NULL));
     T(EVP_DigestUpdate(ctx, pt, pt_size));
 
-    /* printf("Digest size before final: MD_CTX_size=%d mac_size=%zu EVP_MD_size=%d md_len=%u\n",  */
-    /*        EVP_MD_CTX_size(ctx), mac_size, EVP_MD_size(EVP_MD_CTX_md(ctx)), md_len); */
-    /* T(EVP_DigestFinal_ex(ctx, md_value, &md_len)); */
-    /* printf("Digest size after final:  MD_CTX_size=%d mac_size=%zu EVP_MD_size=%d md_len=%u\n",  */
-    /*        EVP_MD_CTX_size(ctx), mac_size, EVP_MD_size(EVP_MD_CTX_md(ctx)), md_len); */
-
     if (EVP_MD_flags(EVP_MD_CTX_md(ctx)) & EVP_MD_FLAG_XOF) {
-	T(EVP_DigestFinalXOF(ctx, md_value, mac_size));
-	md_len = (unsigned int)mac_size;
+         T(EVP_DigestFinalXOF(ctx, md_value, mac_size));
+         md_len = (unsigned int) mac_size;
     } else {
-	T(EVP_MD_CTX_size(ctx) == mac_size);
-	T(EVP_DigestFinal_ex(ctx, md_value, &md_len));
+         T(EVP_MD_CTX_size(ctx) == mac_size);
+         T(EVP_DigestFinal_ex(ctx, md_value, &md_len));
     }
 
     EVP_MD_CTX_free(ctx);
@@ -378,7 +361,7 @@ static int test_mac(const char *name, const char *from,
     hexdump(md_value, mac_size);
 
     TEST_ASSERT(md_len != mac_size ||
-	memcmp(mac, md_value, mac_size));
+         memcmp(mac, md_value, mac_size));
 
     return test;
 }

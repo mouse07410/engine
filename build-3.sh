@@ -23,8 +23,8 @@ else
     CMAKE_BUILD_TYPE=Release
 fi
 
-if [ -z ${OPENSSL_ROOT_DIR} ]; then
-    OPENSSL_ROOT_DIR=${OPENSSL_DIR}
+if [ -z "${OPENSSL_ROOT_DIR}" ]; then
+    export OPENSSL_ROOT_DIR=${OPENSSL_DIR}
 fi
 
 if [ -z ${DEBUG+x} ]; then

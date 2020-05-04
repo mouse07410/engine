@@ -615,6 +615,19 @@ static int pkey_gost2018_decrypt(EVP_PKEY_CTX *pctx, unsigned char *key,
 
    o  q * Q_eph is not equal to zero point.
 */
+    if (data->shared_ukm == NULL && pst->ukm != NULL) {
+        if (EVP_PKEY_CTX_ctrl(pctx, -1, -1, EVP_PKEY_CTRL_SET_IV,
+        ASN1_STRING_length(pst->ukm), (void *)ASN1_STRING_get0_data(pst->ukm)) < 0) {
+            GOSTerr(GOST_F_PKEY_GOST2018_DECRYPT, GOST_R_UKM_NOT_SET);
+            goto err;
+        }
+    }
+
+    if (data->shared_ukm == NULL) {
+        GOSTerr(GOST_F_PKEY_GOST2018_DECRYPT, GOST_R_UKM_NOT_SET);
+        goto err;
+    }
+
     if (gost_keg(data->shared_ukm, pkey_nid,
                  EC_KEY_get0_public_key(EVP_PKEY_get0(eph_key)),
                  EVP_PKEY_get0(priv), expkeys) <= 0) {
@@ -642,7 +655,8 @@ static int pkey_gost2018_decrypt(EVP_PKEY_CTX *pctx, unsigned char *key,
 int pkey_gost_decrypt(EVP_PKEY_CTX *pctx, unsigned char *key,
                       size_t *key_len, const unsigned char *in, size_t in_len)
 {
-    struct gost_pmeth_data *data = EVP_PKEY_CTX_get_data(pctx);
+    struct gost_pmeth_data *gctx = EVP_PKEY_CTX_get_data(pctx);
+#if 0
     if (data->shared_ukm == NULL || data->shared_ukm_size == 8)
         return pkey_GOST_ECcp_decrypt(pctx, key, key_len, in, in_len);
     else if (data->shared_ukm_size == 32)
@@ -651,4 +665,18 @@ int pkey_gost_decrypt(EVP_PKEY_CTX *pctx, unsigned char *key,
         GOSTerr(GOST_F_PKEY_GOST_DECRYPT, ERR_R_INTERNAL_ERROR);
         return -1;
     }
+#else
+	switch (gctx->cipher_nid)
+	{
+		case NID_id_Gost28147_89:
+		case NID_undef: /* FIXME */
+			return pkey_GOST_ECcp_decrypt(pctx, key, key_len, in, in_len);
+		case NID_kuznyechik_ctr:
+		case NID_magma_ctr:
+			return pkey_gost2018_decrypt(pctx, key, key_len, in, in_len);
+		default:
+      GOSTerr(GOST_F_PKEY_GOST_DECRYPT, ERR_R_INTERNAL_ERROR);
+      return -1;
+	}
+#endif
 }

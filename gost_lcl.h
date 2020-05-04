@@ -130,6 +130,7 @@ typedef struct {                /* FIXME incomplete */
 typedef struct PSKeyTransport_st {
     ASN1_OCTET_STRING *psexp;
     X509_PUBKEY       *ephem_key;
+    ASN1_OCTET_STRING *ukm;
 } PSKeyTransport_gost;
 
 DECLARE_ASN1_FUNCTIONS(PSKeyTransport_gost)
@@ -165,6 +166,12 @@ typedef struct {
 } GOST_CIPHER_PARAMS;
 
 DECLARE_ASN1_FUNCTIONS(GOST_CIPHER_PARAMS)
+
+typedef struct {
+	ASN1_OCTET_STRING *ukm;
+	} GOST2015_CIPHER_PARAMS;
+
+DECLARE_ASN1_FUNCTIONS(GOST2015_CIPHER_PARAMS)
 
 typedef struct {
     ASN1_OCTET_STRING *masked_priv_key;
@@ -240,7 +247,10 @@ const EVP_CIPHER *cipher_gost_cpacnt();
 const EVP_CIPHER *cipher_gost_cpcnt_12();
 const EVP_CIPHER *cipher_magma_cbc();
 const EVP_CIPHER *cipher_magma_ctr();
+const EVP_CIPHER *cipher_magma_wrap();
+const EVP_CIPHER *cipher_kuznyechik_wrap();
 void cipher_gost_destroy();
+void wrap_ciphers_destroy();
 
 void inc_counter(unsigned char *counter, size_t counter_bytes);
 

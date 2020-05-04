@@ -8,7 +8,8 @@ include(CheckCSourceRuns)
 
 enable_testing()
 
-find_package(OpenSSL 1.1.1 REQUIRED)
+<<<<<<< HEAD
+find_package(OpenSSL 3.0 REQUIRED)
 message(STATUS "Found OpenSSL ${OPENSSL_VERSION_MAJOR}.${OPENSSL_VERSION_MINOR}.${OPENSSL_VERSION_PATCH}.${OPENSSL_VERSION_TWEAK}")
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
@@ -32,7 +33,7 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 if (CMAKE_C_COMPILER_ID MATCHES "Clang")
  add_compile_options(-O2 -Werror -Wall -Wno-unused-parameter -Wno-unused-function -Wno-missing-braces -ggdb -Qunused-arguments)
 elseif(CMAKE_C_COMPILER_ID MATCHES "GNU")
- add_compile_options(-O2 -Werror -Wall -Wno-unused-parameter -Wno-unused-function -Wno-missing-braces -ggdb -Wno-error=unknown-pragmas)
+ add_compile_options(-O2 -Werror -Wall -Wno-unused-parameter -Wno-unused-function -Wno-missing-braces -ggdb -Wno-error=unknown-pragmas -Wno-deprecated-declarations)
 elseif(CMAKE_C_COMPILER_ID MATCHES "MSVC")
  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
  add_definitions(-D_CRT_DEPRECATED_NO_WARNINGS)
@@ -178,6 +179,7 @@ set(GOST_ENGINE_SOURCE_FILES
         gost_pmeth.c
         gost_omac.c
         gost_omac_acpkm.c
+        gost_gost2015.c
         )
 
 add_executable(test_digest test_digest.c)

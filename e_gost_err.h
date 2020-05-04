@@ -33,9 +33,14 @@ void ERR_GOST_error(int function, int reason, char *file, int line);
 # define GOST_F_ENCODE_GOST_ALGOR_PARAMS                  101
 # define GOST_F_FILL_GOST_EC_PARAMS                       102
 # define GOST_F_GET_ENCRYPTION_PARAMS                     103
+# define GOST_F_GOST2015_GET_ASN1_PARAMS                  158
+# define GOST_F_GOST2015_SET_ASN1_PARAMS                  159
 # define GOST_F_GOST89_GET_ASN1_PARAMETERS                104
 # define GOST_F_GOST89_SET_ASN1_PARAMETERS                105
 # define GOST_F_GOST_CIPHER_CTL                           106
+# define GOST_F_GOST_CMS_SET_KARI_SHARED_INFO             156
+# define GOST_F_GOST_CMS_SET_KTRI_SHARED_INFO             157
+# define GOST_F_GOST_CMS_SET_SHARED_INFO                  155
 # define GOST_F_GOST_EC_COMPUTE_PUBLIC                    107
 # define GOST_F_GOST_EC_KEYGEN                            108
 # define GOST_F_GOST_EC_SIGN                              109
@@ -98,8 +103,10 @@ void ERR_GOST_error(int function, int reason, char *file, int line);
 # define GOST_R_CTRL_CALL_FAILED                          104
 # define GOST_R_ERROR_COMPUTING_EXPORT_KEYS               135
 # define GOST_R_ERROR_COMPUTING_SHARED_KEY                105
+# define GOST_R_ERROR_DECODING_PUBLIC_KEY                 138
 # define GOST_R_ERROR_PARSING_KEY_TRANSPORT_INFO          106
 # define GOST_R_ERROR_POINT_MUL                           107
+# define GOST_R_ERROR_SETTING_PEER_KEY                    139
 # define GOST_R_INCOMPATIBLE_ALGORITHMS                   108
 # define GOST_R_INCOMPATIBLE_PEER_KEY                     109
 # define GOST_R_INVALID_CIPHER                            134
@@ -125,5 +132,6 @@ void ERR_GOST_error(int function, int reason, char *file, int line);
 # define GOST_R_UKM_NOT_SET                               129
 # define GOST_R_UNSUPPORTED_CIPHER_CTL_COMMAND            130
 # define GOST_R_UNSUPPORTED_PARAMETER_SET                 131
+# define GOST_R_UNSUPPORTED_RECIPIENT_INFO                137
 
 #endif

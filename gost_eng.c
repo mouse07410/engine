@@ -158,6 +158,18 @@ static struct gost_cipher_minfo {
         NID_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm,
         cipher_gost_grasshopper_ctracpkm,
     },
+    {
+        NID_kuznyechik_ctr_acpkm_omac,
+        cipher_gost_grasshopper_ctracpkm_omac,
+    },
+    {
+        NID_magma_kexp15,
+        cipher_magma_wrap,
+    },
+    {
+        NID_kuznyechik_kexp15,
+        cipher_kuznyechik_wrap,
+    },
     { 0 },
 };
 
@@ -261,6 +273,7 @@ static int gost_engine_destroy(ENGINE* e) {
 
     cipher_gost_destroy();
     cipher_gost_grasshopper_destroy();
+    wrap_ciphers_destroy();
 
     gost_param_free();
 

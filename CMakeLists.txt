@@ -8,7 +8,6 @@ include(CheckCSourceRuns)
 
 enable_testing()
 
-<<<<<<< HEAD
 find_package(OpenSSL 3.0 REQUIRED)
 message(STATUS "Found OpenSSL ${OPENSSL_VERSION_MAJOR}.${OPENSSL_VERSION_MINOR}.${OPENSSL_VERSION_PATCH}.${OPENSSL_VERSION_TWEAK}")
 

@@ -27,7 +27,7 @@ if [ -z "${OPENSSL_ROOT_DIR}" ]; then
     export OPENSSL_ROOT_DIR=${OPENSSL_DIR}
 fi
 
-if [ -z ${DEBUG+x} ]; then
+if [ -z ${DEBUG} ]; then
     # DEBUG not set, building Release
     CMAKE_BUILD_TYPE=Release
 else

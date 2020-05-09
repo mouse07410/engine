@@ -464,7 +464,6 @@ int main(int argc, char **argv)
     /* Trigger SIGBUS for unaligned access. */
     sysmips(MIPS_FIXADE, 0);
 #endif
-    setenv("CRYPT_PARAMS", "", 0);
     setenv("OPENSSL_ENGINES", ENGINE_DIR, 0);
     OPENSSL_add_all_algorithms_conf();
     ERR_load_crypto_strings();

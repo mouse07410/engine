@@ -23,6 +23,10 @@ else
     CMAKE_BUILD_TYPE=Release
 fi
 
+if [ -z ${CC} ]; then
+    CC="clang"
+fi
+
 if [ -z "${OPENSSL_ROOT_DIR}" ]; then
     export OPENSSL_ROOT_DIR=${OPENSSL_DIR}
 fi
@@ -48,7 +52,7 @@ mkdir -p build
 
 cd build
 
-cmake .. -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR} -DOPENSSL_ENGINES_DIR=${OPENSSL_ENGINES_DIR} 2>&1 | tee ../cmake${THREE}out.txt
+cmake .. -DCMAKE_C_COMPILER=${CC} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR} -DOPENSSL_ENGINES_DIR=${OPENSSL_ENGINES_DIR} 2>&1 | tee ../cmake${THREE}out.txt
 make VERBOSE=1 2>&1 | tee ../make${THREE}out.txt
 
 make test 2>&1 | tee ../test${THREE}out.txt

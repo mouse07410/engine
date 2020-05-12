@@ -106,79 +106,24 @@ static struct gost_digest_minfo {
     { 0 },
 };
 
-static struct gost_cipher_minfo {
-    int nid;
-    const EVP_CIPHER *(*cipher)(void);
-} gost_cipher_array[] = {
-    {
-        NID_id_Gost28147_89,
-        cipher_gost,
-    },
-    {
-        NID_gost89_cnt,
-        cipher_gost_cpacnt,
-    },
-    {
-        NID_gost89_cnt_12,
-        cipher_gost_cpcnt_12,
-    },
-    {
-        NID_gost89_cbc,
-        cipher_gost_cbc,
-    },
-    {
-        NID_grasshopper_ecb,
-        cipher_gost_grasshopper_ecb,
-    },
-    {
-        NID_grasshopper_cbc,
-        cipher_gost_grasshopper_cbc,
-    },
-    {
-        NID_grasshopper_cfb,
-        cipher_gost_grasshopper_cfb,
-    },
-    {
-        NID_grasshopper_ofb,
-        cipher_gost_grasshopper_ofb,
-    },
-    {
-        NID_grasshopper_ctr,
-        cipher_gost_grasshopper_ctr,
-    },
-    {
-        NID_magma_cbc,
-        cipher_magma_cbc,
-    },
-    {
-        NID_magma_ctr,
-        cipher_magma_ctr,
-    },
-    {
-        NID_magma_ctr_acpkm,
-        cipher_magma_ctr_acpkm,
-    },
-    {
-        NID_magma_ctr_acpkm_omac,
-        cipher_magma_ctr_acpkm_omac,
-    },
-    {
-        NID_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm,
-        cipher_gost_grasshopper_ctracpkm,
-    },
-    {
-        NID_kuznyechik_ctr_acpkm_omac,
-        cipher_gost_grasshopper_ctracpkm_omac,
-    },
-    {
-        NID_magma_kexp15,
-        cipher_magma_wrap,
-    },
-    {
-        NID_kuznyechik_kexp15,
-        cipher_kuznyechik_wrap,
-    },
-    { 0 },
+GOST_cipher *gost_cipher_array[] = {
+    &Gost28147_89_cipher,
+    &Gost28147_89_cnt_cipher,
+    &Gost28147_89_cnt_12_cipher,
+    &Gost28147_89_cbc_cipher,
+    &grasshopper_ecb_cipher,
+    &grasshopper_cbc_cipher,
+    &grasshopper_cfb_cipher,
+    &grasshopper_ofb_cipher,
+    &grasshopper_ctr_cipher,
+    &magma_cbc_cipher,
+    &magma_ctr_cipher,
+    &magma_ctr_acpkm_cipher,
+    &magma_ctr_acpkm_omac_cipher,
+    &grasshopper_ctr_acpkm_cipher,
+    &grasshopper_ctr_acpkm_omac_cipher,
+    &magma_kexp15_cipher,
+    &kuznyechik_kexp15_cipher,
 };
 
 static struct gost_meth_minfo {
@@ -260,7 +205,7 @@ static struct gost_meth_minfo {
 
 /* `- 1' because of terminating zero element */
 static int known_digest_nids[OSSL_NELEM(gost_digest_array) - 1];
-static int known_cipher_nids[OSSL_NELEM(gost_cipher_array) - 1];
+static int known_cipher_nids[OSSL_NELEM(gost_cipher_array)];
 static int known_meths_nids[OSSL_NELEM(gost_meth_array) - 1];
 
 static int gost_engine_init(ENGINE* e) {
@@ -279,9 +224,9 @@ static int gost_engine_destroy(ENGINE* e) {
         dinfo->destroy();
     }
 
-    cipher_gost_destroy();
-    cipher_gost_grasshopper_destroy();
-    wrap_ciphers_destroy();
+    int i;
+    for (i = 0; i < OSSL_NELEM(gost_cipher_array); i++)
+	GOST_deinit_cipher(gost_cipher_array[i]);
 
     gost_param_free();
 
@@ -362,10 +307,11 @@ static int bind_gost(ENGINE* e, const char* id) {
         || !ENGINE_register_pkey_meths(e))
         goto end;
 
-    struct gost_cipher_minfo *cinfo = gost_cipher_array;
-    for (; cinfo->nid; cinfo++)
-        if (!EVP_add_cipher(cinfo->cipher()))
+    int i;
+    for (i = 0; i < OSSL_NELEM(gost_cipher_array); i++) {
+	if (!EVP_add_cipher(GOST_init_cipher(gost_cipher_array[i])))
             goto end;
+    }
 
     struct gost_digest_minfo *dinfo = gost_digest_array;
     for (; dinfo->nid; dinfo++) {
@@ -417,21 +363,21 @@ static int gost_digests(ENGINE *e, const EVP_MD **digest,
 static int gost_ciphers(ENGINE *e, const EVP_CIPHER **cipher,
                         const int **nids, int nid)
 {
-    struct gost_cipher_minfo *info = gost_cipher_array;
+    int i;
 
     if (!cipher) {
         int *n = known_cipher_nids;
 
         *nids = n;
-        for (; info->nid; info++)
-            *n++ = info->nid;
-        return OSSL_NELEM(known_cipher_nids);
+        for (i = 0; i < OSSL_NELEM(gost_cipher_array); i++)
+            *n++ = gost_cipher_array[i]->nid;
+        return i;
     }
 
-    for (; info->nid; info++)
-        if (nid == info->nid) {
-            *cipher = info->cipher();
-            return 1;
+    for (i = 0; i < OSSL_NELEM(gost_cipher_array); i++)
+        if (nid == gost_cipher_array[i]->nid) {
+	    *cipher = GOST_init_cipher(gost_cipher_array[i]);
+	    return 1;
         }
     *cipher = NULL;
     return 0;
@@ -510,3 +456,4 @@ void ENGINE_load_gost(void) {
 }
 
 #endif
+/* vim: set expandtab cinoptions=\:0,l1,t0,g0,(0 sw=4 : */

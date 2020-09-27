@@ -34,7 +34,7 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 if (CMAKE_C_COMPILER_ID MATCHES "Clang")
  add_compile_options(-O2 -Werror -Wall -Wno-unused-parameter -Wno-unused-function -Wno-missing-braces -ggdb -Qunused-arguments -Wno-deprecated-declarations)
 elseif(CMAKE_C_COMPILER_ID MATCHES "GNU")
- add_compile_options(-O2 -Werror -Wall -Wno-unused-parameter -Wno-unused-function -Wno-missing-braces -ggdb -Wno-error=unknown-pragmas -Wno-deprecated-declarations)
+ add_compile_options(-O2 -Werror -Wall -Wno-unused-parameter -Wno-unused-function -Wno-missing-braces -ggdb -Wno-error=unknown-pragmas -Wno-error=pragmas -Wno-deprecated-declarations)
 elseif(CMAKE_C_COMPILER_ID MATCHES "MSVC")
  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
  add_definitions(-D_CRT_DEPRECATED_NO_WARNINGS)
@@ -84,6 +84,18 @@ check_c_source_runs("
   " ADDCARRY_U64)
 if (ADDCARRY_U64)
   add_definitions(-DHAVE_ADDCARRY_U64)
+endif()
+
+check_c_source_runs("
+  int main(void) {
+    char buf[16] = { 0, 1, 2 };
+    int *p = buf + 1;
+    int *q = buf + 2;
+    return (*p == *q);
+  }
+  " RELAXED_ALIGNMENT)
+if (NOT RELAXED_ALIGNMENT)
+  add_definitions(-DSTRICT_ALIGNMENT)
 endif()
 
 set(BIN_DIRECTORY bin)

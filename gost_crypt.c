@@ -456,8 +456,10 @@ static int magma_cipher_init(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         }
     }
 
-    if (key)
+    if (key) {
         magma_key(&(c->cctx), key);
+        magma_master_key(&(c->cctx), key);
+    }
     if (iv) {
         memcpy((unsigned char *)EVP_CIPHER_CTX_original_iv(ctx), iv,
                EVP_CIPHER_CTX_iv_length(ctx));
@@ -642,34 +644,41 @@ static void ctr64_inc(unsigned char *counter)
     inc_counter(counter, 8);
 }
 
+#define MAGMA_BLOCK_SIZE 8
+#define MAGMA_BLOCK_MASK (MAGMA_BLOCK_SIZE - 1)
+static inline void apply_acpkm_magma(struct ossl_gost_cipher_ctx *
+                                           ctx, unsigned int *num)
+{
+    if (!ctx->key_meshing || (*num < ctx->key_meshing))
+        return;
+    acpkm_magma_key_meshing(&ctx->cctx);
+    *num &= MAGMA_BLOCK_MASK;
+}
+
 /* MAGMA encryption in CTR mode */
 static int magma_cipher_do_ctr(EVP_CIPHER_CTX *ctx, unsigned char *out,
                                const unsigned char *in, size_t inl)
 {
     const unsigned char *in_ptr = in;
     unsigned char *out_ptr = out;
-    size_t i = 0;
     size_t j;
     struct ossl_gost_cipher_ctx *c = EVP_CIPHER_CTX_get_cipher_data(ctx);
     unsigned char *buf = EVP_CIPHER_CTX_buf_noconst(ctx);
     unsigned char *iv = EVP_CIPHER_CTX_iv_noconst(ctx);
+    unsigned int num = EVP_CIPHER_CTX_num(ctx);
+    size_t blocks, i, lasted = inl;
     unsigned char b[8];
 /* Process partial blocks */
-    if (EVP_CIPHER_CTX_num(ctx)) {
-        for (j = EVP_CIPHER_CTX_num(ctx), i = 0; j < 8 && i < inl;
-             j++, i++, in_ptr++, out_ptr++) {
-            *out_ptr = buf[7 - j] ^ (*in_ptr);
-        }
-        if (j == 8) {
-            EVP_CIPHER_CTX_set_num(ctx, 0);
-        } else {
-            EVP_CIPHER_CTX_set_num(ctx, j);
-            return inl;
-        }
+    while ((num & MAGMA_BLOCK_MASK) && lasted) {
+        *out_ptr++ = *in_ptr++ ^ buf[7 - (num & MAGMA_BLOCK_MASK)];
+        --lasted;
+        num++;
     }
+    blocks = lasted / MAGMA_BLOCK_SIZE;
 
 /* Process full blocks */
-    for (; i + 8 <= inl; i += 8, in_ptr += 8, out_ptr += 8) {
+    for (i = 0; i < blocks; i++) {
+        apply_acpkm_magma(c, &num);
         for (j = 0; j < 8; j++) {
             b[7 - j] = iv[j];
         }
@@ -678,31 +687,28 @@ static int magma_cipher_do_ctr(EVP_CIPHER_CTX *ctx, unsigned char *out,
             out_ptr[j] = buf[7 - j] ^ in_ptr[j];
         }
         ctr64_inc(iv);
-        c->count += 8;
-        if (c->key_meshing && (c->count % c->key_meshing == 0))
-            acpkm_magma_key_meshing(&(c->cctx));
+        c->count += MAGMA_BLOCK_SIZE;
+        in_ptr += MAGMA_BLOCK_SIZE;
+        out_ptr += MAGMA_BLOCK_SIZE;
+        num += MAGMA_BLOCK_SIZE;
+        lasted -= MAGMA_BLOCK_SIZE;
     }
 
 /* Process the rest of plaintext */
-    if (i < inl) {
+    if (lasted > 0) {
+        apply_acpkm_magma(c, &num);
         for (j = 0; j < 8; j++) {
             b[7 - j] = iv[j];
         }
         gostcrypt(&(c->cctx), b, buf);
 
-        for (j = 0; i < inl; j++, i++) {
-            out_ptr[j] = buf[7 - j] ^ in_ptr[j];
-        }
-
+        for (i = 0; i < lasted; i++)
+            out_ptr[i] = buf[7 - i] ^ in_ptr[i];
         ctr64_inc(iv);
-        c->count += 8;
-        if (c->key_meshing && (c->count % c->key_meshing == 0))
-            acpkm_magma_key_meshing(&(c->cctx));
-
-        EVP_CIPHER_CTX_set_num(ctx, j);
-    } else {
-        EVP_CIPHER_CTX_set_num(ctx, 0);
+        c->count += j;
+        num += lasted;
     }
+    EVP_CIPHER_CTX_set_num(ctx, num);
 
     return inl;
 }
@@ -761,7 +767,7 @@ static int gost_cipher_do_cfb(EVP_CIPHER_CTX *ctx, unsigned char *out,
         }
     }
 
-    for (; i + 8 < inl; i += 8, in_ptr += 8, out_ptr += 8) {
+    for (; (inl - i) >= 8; i += 8, in_ptr += 8, out_ptr += 8) {
         /*
          * block cipher current iv
          */
@@ -822,7 +828,7 @@ static int gost_cipher_do_cnt(EVP_CIPHER_CTX *ctx, unsigned char *out,
         }
     }
 
-    for (; i + 8 < inl; i += 8, in_ptr += 8, out_ptr += 8) {
+    for (; (inl - i) >= 8; i += 8, in_ptr += 8, out_ptr += 8) {
         /*
          * block cipher current iv
          */
@@ -944,6 +950,27 @@ static int gost_cipher_ctl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
     return 1;
 }
 
+/* Decrement 8-byte sequence if needed */
+int decrement_sequence(unsigned char *seq, int decrement) {
+    if (decrement < 0 || decrement > 1)
+        return 0; 
+    
+    int j;
+    if (decrement) {
+       for (j = 7; j >= 0; j--)
+            {
+                if (seq[j] != 0)
+                {
+                    seq[j]--;
+                    break;
+                }
+                else
+                    seq[j] = 0xFF;
+            }
+    }
+    return 1;
+}
+
 /* Control function for gost cipher */
 static int magma_cipher_ctl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
 {
@@ -971,6 +998,54 @@ static int magma_cipher_ctl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
             c->key_meshing = arg;
             return 1;
         }
+    case EVP_CTRL_TLSTREE:
+        {
+            unsigned char newkey[32];
+            int mode = EVP_CIPHER_CTX_mode(ctx);
+            struct ossl_gost_cipher_ctx *ctr_ctx = NULL;
+            gost_ctx *c = NULL;
+
+            unsigned char adjusted_iv[8];
+            unsigned char seq[8];
+            int j, carry, decrement_arg;
+            if (mode != EVP_CIPH_CTR_MODE)
+                return -1;
+
+            ctr_ctx = (struct ossl_gost_cipher_ctx *)EVP_CIPHER_CTX_get_cipher_data(ctx);
+            c = &(ctr_ctx->cctx);
+
+            /*
+             * 'arg' parameter indicates what we should do with sequence value.
+             * 
+             * When function called, seq is incremented after MAC calculation.
+             * In ETM mode, we use seq 'as is' in the ctrl-function (arg = 0)
+             * Otherwise we have to decrease it in the implementation (arg = 1).
+             */
+            memcpy(seq, ptr, 8);
+            decrement_arg = arg;
+            if(!decrement_sequence(seq, decrement_arg)) {
+                GOSTerr(GOST_F_MAGMA_CIPHER_CTL, GOST_R_CTRL_CALL_FAILED);
+                return -1;
+            }
+
+            if (gost_tlstree(NID_magma_cbc, (const unsigned char *)c->master_key, newkey,
+                             (const unsigned char *)seq) > 0) {
+                memset(adjusted_iv, 0, 8);
+                memcpy(adjusted_iv, EVP_CIPHER_CTX_original_iv(ctx), 4);
+                for (j = 3, carry = 0; j >= 0; j--)
+                {
+                    int adj_byte = adjusted_iv[j] + seq[j+4] + carry;
+                    carry = (adj_byte > 255) ? 1 : 0;
+                    adjusted_iv[j] = adj_byte & 0xFF;
+                }
+                EVP_CIPHER_CTX_set_num(ctx, 0);
+                memcpy(EVP_CIPHER_CTX_iv_noconst(ctx), adjusted_iv, 8);
+
+                magma_key(c, newkey);
+                return 1;
+          }
+        }
+        return -1;
     default:
         GOSTerr(GOST_F_MAGMA_CIPHER_CTL, GOST_R_UNSUPPORTED_CIPHER_CTL_COMMAND);
         return -1;

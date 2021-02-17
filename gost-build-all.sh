@@ -10,7 +10,7 @@ if [ "$1" = "pull" ]; then
   git pull
 fi
 
-OPENSSL_DIR="" ./gost-build-3.sh 2>&1 | tee ossl3-build.txt && cp build/bin/gost.3.0.dylib ~/openssl-3/lib/engines-3/ && cp build/bin/gost*sum ~/openssl-3/bin/
+OPENSSL_DIR="" ./gost-build-3.sh 2>&1 | tee ossl3-build.txt && cp build/bin/gost.dylib ~/openssl-3/lib/engines-3/gost.3.0.dylib && cp build/bin/gost*sum ~/openssl-3/bin/
 
 git checkout openssl_1_1_1
 if [ "$1" = "pull" ]; then

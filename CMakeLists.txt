@@ -299,7 +299,10 @@ set_target_properties(gost_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 #add_library(gost_engine SHARED ${GOST_ENGINE_SOURCE_FILES} ${OPENSSL_CRYPTO_LIBRARY})
 add_library(gost_engine MODULE ${GOST_ENGINE_SOURCE_FILES})
-set_target_properties(gost_engine PROPERTIES PREFIX "" OUTPUT_NAME "gost")
+# Set the suffix explicitly to adapt to OpenSSL's idea of what a
+# module suffix should be
+set_target_properties(gost_engine PROPERTIES
+  PREFIX "" OUTPUT_NAME "gost" SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX})
 target_link_libraries(gost_engine gost_core ${OPENSSL_CRYPTO_LIBRARY})
 
 set(GOST_SUM_SOURCE_FILES

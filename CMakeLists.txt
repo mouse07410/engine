@@ -334,7 +334,12 @@ add_custom_target(tags
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 add_custom_target(tcl_tests
-    COMMAND ENGINE_DIR=${OUTPUT_DIRECTORY} sh ./runtest.sh
+    COMMAND OPENSSL_LIBCRYPTO=${OPENSSL_CRYPTO_LIBRARY}
+            OPENSSL_APP=${OPENSSL_PROGRAM}
+            TESTSRC=${CMAKE_SOURCE_DIR}/tcl_tests
+            TESTDIR=${CMAKE_BINARY_DIR}/tcl_tests
+            ENGINE_DIR=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+            sh ./runtest.sh
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tcl_tests)
 
 add_executable(test_tlstree test_tlstree.c)
@@ -342,7 +347,7 @@ target_link_libraries(test_tlstree PUBLIC ${OPENSSL_CRYPTO_LIBRARY})
 
 # install programs and manuals
 install(TARGETS gostsum gost12sum RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES gostsum.1 gost12sum.1 DESTINATION ${CMAKE_INSTALL_DIR}/man1)
+install(FILES gostsum.1 gost12sum.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
 # install engine in library and module form
 install(TARGETS lib_gost_engine EXPORT GostEngineConfig LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

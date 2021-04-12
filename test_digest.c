@@ -49,9 +49,9 @@
 #define cMAGENT "\033[1;35m"
 #define cNORM	"\033[m"
 #define TEST_ASSERT(e) {if ((test = (e))) \
-		 printf(cRED "  Test FAILED\n" cNORM); \
+		 printf(cRED "  Test FAILED" cNORM "\n"); \
 	     else \
-		 printf(cGREEN "  Test passed\n" cNORM);}
+		 printf(cGREEN "  Test passed" cNORM "\n");}
 
 /* To test older APIs. */
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -509,7 +509,7 @@ static int do_hmac_old(int iter, const EVP_MD *type, const char *plaintext,
     if (t->mdsize)
 	T(len == t->mdsize);
     if (memcmp(md, t->hmac, len) != 0) {
-	printf(cRED "hmac mismatch\n" cNORM);
+	printf(cRED "hmac mismatch" cNORM "\n");
 	hexdump(t->hmac, len);
 	hexdump(md, len);
 	return 1;
@@ -533,12 +533,9 @@ static int do_hmac_prov(int iter, const EVP_MD *type, const char *plaintext,
     OSSL_PARAM params[] = {
 	OSSL_PARAM_utf8_string(OSSL_MAC_PARAM_DIGEST,
 	    (char *)EVP_MD_name(type), 0),
-	OSSL_PARAM_octet_string(OSSL_MAC_PARAM_KEY,
-	    (char *)t->key, t->key_size),
 	OSSL_PARAM_END
     };
-    T(EVP_MAC_CTX_set_params(ctx, params));
-    T(EVP_MAC_init(ctx));
+    T(EVP_MAC_init(ctx, (const unsigned char *)t->key, t->key_size, params));
     T(EVP_MAC_update(ctx, (unsigned char *)plaintext, t->psize));
     T(EVP_MAC_final(ctx, md, &len, EVP_MAX_MD_SIZE));
     EVP_MAC_CTX_free(ctx);
@@ -547,7 +544,7 @@ static int do_hmac_prov(int iter, const EVP_MD *type, const char *plaintext,
     if (t->mdsize)
 	T(len == t->mdsize);
     if (memcmp(md, t->hmac, len) != 0) {
-	printf(cRED "hmac mismatch\n" cNORM);
+	printf(cRED "hmac mismatch" cNORM "\n");
 	hexdump(t->hmac, len);
 	hexdump(md, len);
 	return 1;
@@ -609,11 +606,10 @@ static int do_cmac_prov(int iter, const char *plaintext,
     T(ctx = EVP_MAC_CTX_new(cmac));
     OSSL_PARAM params[] = {
 	OSSL_PARAM_utf8_string(OSSL_MAC_PARAM_CIPHER, mdname, 0),
-	OSSL_PARAM_octet_string(OSSL_MAC_PARAM_KEY, (char *)t->key, t->key_size),
 	OSSL_PARAM_END
     };
     T(EVP_MAC_CTX_set_params(ctx, params));
-    T(EVP_MAC_init(ctx));
+    T(EVP_MAC_init(ctx, (const unsigned char *)t->key, t->key_size, params));
     T(EVP_MAC_update(ctx, (unsigned char *)plaintext, t->psize));
     T(EVP_MAC_final(ctx, md, &len, EVP_MAX_MD_SIZE));
     EVP_MAC_CTX_free(ctx);
@@ -623,7 +619,7 @@ static int do_cmac_prov(int iter, const char *plaintext,
      * So, just compare until what we need. */
     T(mdsize <= len);
     if (memcmp(md, t->digest, mdsize) != 0) {
-	printf(cRED "cmac mismatch\n" cNORM);
+	printf(cRED "cmac mismatch" cNORM "\n");
 	hexdump(t->digest, mdsize);
 	hexdump(md, len);
 	return 1;
@@ -673,7 +669,7 @@ static int do_digest(int iter, const EVP_MD *type, const char *plaintext,
     EVP_MD_CTX_free(ctx);
     T(len == mdsize);
     if (memcmp(md, t->digest, mdsize) != 0) {
-	printf(cRED "digest mismatch\n" cNORM);
+	printf(cRED "digest mismatch" cNORM "\n");
 	hexdump(t->digest, mdsize);
 	hexdump(md, mdsize);
 	return 1;
@@ -711,9 +707,9 @@ static int do_test(const struct hash_testvec *tv)
     OPENSSL_free(buf);
 
     if (!ret)
-	printf(cGREEN "success\n" cNORM);
+	printf(cGREEN "success" cNORM "\n");
     else
-	printf(cRED "fail\n" cNORM);
+	printf(cRED "fail" cNORM "\n");
     return ret;
 }
 
@@ -775,13 +771,13 @@ static int do_synthetic_once(const struct hash_testvec *tv, unsigned int shifts)
     EVP_MD_CTX_free(ctx2);
 
     if (len != mdlen) {
-	printf(cRED "digest output len mismatch %u != %u (expected)\n" cNORM,
+	printf(cRED "digest output len mismatch %u != %u (expected)" cNORM "\n",
 	    len, mdlen);
 	goto err;
     }
 
     if (memcmp(md, tv->digest, mdlen) != 0) {
-	printf(cRED "digest mismatch\n" cNORM);
+	printf(cRED "digest mismatch" cNORM "\n");
 
 	unsigned int i;
 	printf("  Expected value is: ");
@@ -811,9 +807,9 @@ static int do_synthetic_test(const struct hash_testvec *tv)
 	ret |= do_synthetic_once(tv, shifts);
 
     if (!ret)
-	printf(cGREEN "success\n" cNORM);
+	printf(cGREEN "success" cNORM "\n");
     else
-	printf(cRED "fail\n" cNORM);
+	printf(cRED "fail" cNORM "\n");
     return 0;
 }
 
@@ -851,15 +847,15 @@ int main(int argc, char **argv)
 	    if (tv->nid == nids[k])
 		break;
 	if (!tv->nid)
-	    printf(cMAGENT "Digest %s is untested!\n" cNORM, OBJ_nid2sn(nids[k]));
+	    printf(cMAGENT "Digest %s is untested!" cNORM "\n", OBJ_nid2sn(nids[k]));
     }
 
     ENGINE_finish(eng);
     ENGINE_free(eng);
 
     if (ret)
-	printf(cDRED "= Some tests FAILED!\n" cNORM);
+	printf(cDRED "= Some tests FAILED!" cNORM "\n");
     else
-	printf(cDGREEN "= All tests passed!\n" cNORM);
+	printf(cDGREEN "= All tests passed!" cNORM "\n");
     return ret;
 }

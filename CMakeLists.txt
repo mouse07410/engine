@@ -9,6 +9,7 @@ include(CheckCSourceRuns)
 enable_testing()
 
 find_package(OpenSSL 3.0 REQUIRED)
+
 message(STATUS "Found OpenSSL ${OPENSSL_VERSION_MAJOR}.${OPENSSL_VERSION_MINOR}.${OPENSSL_VERSION_PATCH}.${OPENSSL_VERSION_TWEAK}")
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
@@ -29,11 +30,17 @@ set(CMAKE_C_FLAGS_MINSIZEREL "-Os -march=native -std=gnu17")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Os -Ofast -g -march=native -std=gnu17")
 set(CMAKE_C_FLAGS_RELEASE "-Os -Ofast -march=native -std=gnu17")
 
-#=======
 #find_program(OPENSSL_PROGRAM openssl
 #  PATHS ${OPENSSL_ROOT_DIR} PATH_SUFFIXES apps bin NO_DEFAULT_PATH)
-#message("-- Found OpenSSL application: ${OPENSSL_PROGRAM}")
-#>>>>>>> upstream/master
+message("-- Found OpenSSL application: ${OPENSSL_PROGRAM}")
+
+if (NOT DEFINED OPENSSL_ROOT_DIR)
+  get_filename_component(OPENSSL_ROOT_DIR ${OPENSSL_INCLUDE_DIR} DIRECTORY)
+  message(STATUS "Setting OpenSSL root: ${OPENSSL_ROOT_DIR}")
+endif()
+find_program(OPENSSL_PROGRAM openssl
+  PATHS ${OPENSSL_ROOT_DIR} PATH_SUFFIXES apps bin NO_DEFAULT_PATH)
+message(STATUS "Found OpenSSL application: ${OPENSSL_PROGRAM}")
 include_directories(${OPENSSL_INCLUDE_DIR})
 
 if (CMAKE_C_COMPILER_ID MATCHES "Clang")

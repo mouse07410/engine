@@ -49,34 +49,38 @@ else()
  add_definitions(-DL_ENDIAN)
 endif()
 
-check_c_source_runs("
-  #ifdef _MSC_VER
-  # include <intrin.h>
-  #else
-  # include <x86intrin.h>
-  #endif
-  int main(void) {
-    unsigned long long x = -1, y = 1, r;
-    unsigned char cf;
-    cf = _addcarry_u64(1, x, y, &r);
-    return !(cf == 1 && r == 1);
-  }
-  " ADDCARRY_U64)
-if (ADDCARRY_U64)
-  add_definitions(-DHAVE_ADDCARRY_U64)
-endif()
+if (NOT CMAKE_CROSSCOMPILING)
+  check_c_source_runs("
+    #ifdef _MSC_VER
+    # include <intrin.h>
+    #else
+    # include <x86intrin.h>
+    #endif
+    int main(void) {
+      unsigned long long x = -1, y = 1, r;
+      unsigned char cf;
+      cf = _addcarry_u64(1, x, y, &r);
+      return !(cf == 1 && r == 1);
+    }
+    " ADDCARRY_U64)
+  if (ADDCARRY_U64)
+    add_definitions(-DHAVE_ADDCARRY_U64)
+  endif()
+endif(NOT CMAKE_CROSSCOMPILING)
 
-check_c_source_runs("
-  int main(void) {
-    char buf[16] = { 0, 1, 2 };
-    int *p = (int *)(buf + 1);
-    int *q = (int *)(buf + 2);
-    return (*p == *q);
-  }
-  " RELAXED_ALIGNMENT)
-if (NOT RELAXED_ALIGNMENT)
-  add_definitions(-DSTRICT_ALIGNMENT)
-endif()
+if (NOT CMAKE_CROSSCOMPILING)
+  check_c_source_runs("
+    int main(void) {
+      char buf[16] = { 0, 1, 2 };
+      int *p = (int *)(buf + 1);
+      int *q = (int *)(buf + 2);
+      return (*p == *q);
+    }
+    " RELAXED_ALIGNMENT)
+  if (NOT RELAXED_ALIGNMENT)
+    add_definitions(-DSTRICT_ALIGNMENT)
+  endif()
+endif(NOT CMAKE_CROSSCOMPILING)
 
 set(BIN_DIRECTORY bin)
 
@@ -298,13 +302,15 @@ add_executable(test_tlstree test_tlstree.c)
 target_link_libraries(test_tlstree PUBLIC OpenSSL::Crypto)
 
 # install
-set(OPENSSL_MAN_INSTALL_DIR ${CMAKE_INSTALL_MANDIR}/man1)
-
-install(TARGETS gost_engine gostsum gost12sum EXPORT GostEngineConfig
-        LIBRARY  DESTINATION ${OPENSSL_ENGINES_DIR}
-        RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES gostsum.1 gost12sum.1 DESTINATION ${OPENSSL_MAN_INSTALL_DIR})
-if (MSVC)
- install(FILES $<TARGET_PDB_FILE:gost_engine> DESTINATION ${OPENSSL_ENGINES_DIR} OPTIONAL)
- install(FILES $<TARGET_PDB_FILE:gostsum> $<TARGET_PDB_FILE:gost12sum> DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
+if (NOT CMAKE_SKIP_INSTALL_RULES)
+  set(OPENSSL_MAN_INSTALL_DIR ${CMAKE_INSTALL_MANDIR}/man1)
+  
+  install(TARGETS gost_engine gostsum gost12sum EXPORT GostEngineConfig
+          LIBRARY  DESTINATION ${OPENSSL_ENGINES_DIR}
+          RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})
+  install(FILES gostsum.1 gost12sum.1 DESTINATION ${OPENSSL_MAN_INSTALL_DIR})
+  if (MSVC)
+   install(FILES $<TARGET_PDB_FILE:gost_engine> DESTINATION ${OPENSSL_ENGINES_DIR} OPTIONAL)
+   install(FILES $<TARGET_PDB_FILE:gostsum> $<TARGET_PDB_FILE:gost12sum> DESTINATION   ${CMAKE_INSTALL_BINDIR} OPTIONAL)
+  endif()
 endif()

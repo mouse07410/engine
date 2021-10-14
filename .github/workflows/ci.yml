@@ -2,13 +2,16 @@ name: CI
 on: [push, pull_request]
 
 env:
-    OPENSSL_BRANCH: openssl-3.0.0-beta2
+    OPENSSL_BRANCH: openssl-3.0
+    USE_RPATH: yes
 
 jobs:
     gcc-openssl-stable:
         runs-on: ubuntu-20.04
         steps:
             - uses: actions/checkout@v2
+              with:
+                  submodules: true
             - run: .github/before_script.sh
             - run: .github/script.sh
 
@@ -18,6 +21,19 @@ jobs:
             CC: clang
         steps:
             - uses: actions/checkout@v2
+              with:
+                  submodules: true
+            - run: .github/before_script.sh
+            - run: .github/script.sh
+
+    macos-openssl-stable:
+        runs-on: macos-11
+        env:
+            USE_RPATH:
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                  submodules: true
             - run: .github/before_script.sh
             - run: .github/script.sh
 
@@ -27,6 +43,20 @@ jobs:
             OPENSSL_BRANCH: master
         steps:
             - uses: actions/checkout@v2
+              with:
+                  submodules: true
+            - run: .github/before_script.sh
+            - run: .github/script.sh
+
+    macos-openssl-master:
+        runs-on: macos-11
+        env:
+            OPENSSL_BRANCH: master
+            USE_RPATH:
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                  submodules: true
             - run: .github/before_script.sh
             - run: .github/script.sh
 
@@ -37,6 +67,8 @@ jobs:
             ASAN: -DASAN=1
         steps:
             - uses: actions/checkout@v2
+              with:
+                  submodules: true
             - run: .github/before_script.sh
             - run: .github/script.sh
 
@@ -45,27 +77,12 @@ jobs:
         env:
             OPENSSL_BRANCH: master
             ASAN: -DASAN=1
+            USE_RPATH:
         steps:
-            - name: install cpanm and Test2::V0
-              uses: perl-actions/install-with-cpanm@v1
+            - uses: actions/checkout@v2
               with:
-                  install: Test2::V0
-            - name: Checkout gost-engine
-              uses: actions/checkout@v2
-            - name: checkout OpenSSL
-              uses: actions/checkout@v2
-              with:
-                  repository: openssl/openssl
-                  ref: master
-                  path: openssl
-            - name: configure OpenSSL
-              run: |
-                  mkdir $HOME/opt
-                  ./Configure --prefix=$HOME/opt
-              working-directory: openssl
-            - name: build+install OpenSSL
-              run: make -s install_sw
-              working-directory: openssl
+                  submodules: true
+            - run: .github/before_script.sh
             - run: .github/script.sh
 
     gcc-openssl-stable-x86:
@@ -77,6 +94,8 @@ jobs:
             APT_INSTALL: gcc-multilib
         steps:
             - uses: actions/checkout@v2
+              with:
+                  submodules: true
             - run: .github/before_script.sh
             - run: .github/script.sh
 

@@ -1,7 +1,7 @@
 name: "CodeQL"
 
 env:
-  OPENSSL_BRANCH: openssl-3.0.0-alpha17
+  OPENSSL_BRANCH: openssl-3.0
   #RPATH: "-Wl,-rpath=${PREFIX}/lib"
   #PREFIX: ${HOME}/opt
   #PATH: ${PREFIX}/bin:${PATH}
@@ -27,6 +27,8 @@ jobs:
         # We must fetch at least the immediate parents so that if this is
         # a pull request then we can checkout the head.
         fetch-depth: 2
+        # gost-engine has submodules
+        submodules: true
 
     # If this run was triggered by a pull request event, then checkout
     # the head of the pull request instead of the merge commit.
@@ -61,7 +63,7 @@ jobs:
        export RPATH="-Wl,-rpath=${PREFIX}/lib"
        cd openssl
        git describe --always --long
-       ./config shared -d --prefix=${PREFIX} --openssldir=${PREFIX} ${RPATH}
+       ./config shared -d --prefix=${PREFIX} --openssldir=${PREFIX} --libdir=lib ${RPATH}
        make -s build_libs
        make -s build_programs
        make -s install_sw

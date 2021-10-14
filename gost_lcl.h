@@ -10,6 +10,7 @@
  *         OpenSSL 0.9.9 libraries required to compile and use        *
  *                              this code                             *
  **********************************************************************/
+# include <openssl/core.h>
 # include <openssl/bn.h>
 # include <openssl/evp.h>
 # include <openssl/asn1t.h>
@@ -36,10 +37,13 @@ typedef struct R3410_ec {
     char *x;
     char *y;
     char *cofactor;
+    EC_GROUP *group;
 } R3410_ec_params;
 
 extern R3410_ec_params R3410_2001_paramset[],
     *R3410_2012_256_paramset, R3410_2012_512_paramset[];
+
+void free_cached_groups(void);
 
 extern const ENGINE_CMD_DEFN gost_cmds[];
 int gost_control_func(ENGINE *e, int cmd, long i, void *p, void (*f) (void));
@@ -48,6 +52,10 @@ int gost_set_default_param(int param, const char *value);
 void gost_param_free(void);
 
 /* method registration */
+
+/* Provider implementation data */
+extern const OSSL_ALGORITHM GOST_prov_macs[];
+void GOST_prov_deinit_mac_digests(void);
 
 int register_ameth_gost(int nid, EVP_PKEY_ASN1_METHOD **ameth,
                         const char *pemstr, const char *info);
@@ -334,6 +342,7 @@ typedef struct gost_cipher_st GOST_cipher;
 EVP_CIPHER *GOST_init_cipher(GOST_cipher *c);
 void GOST_deinit_cipher(GOST_cipher *c);
 
+/* ENGINE implementation data */
 extern GOST_cipher Gost28147_89_cipher;
 extern GOST_cipher Gost28147_89_cbc_cipher;
 extern GOST_cipher Gost28147_89_cnt_cipher;
@@ -351,6 +360,10 @@ extern GOST_cipher grasshopper_ctr_acpkm_cipher;
 extern GOST_cipher grasshopper_ctr_acpkm_omac_cipher;
 extern GOST_cipher magma_kexp15_cipher;
 extern GOST_cipher kuznyechik_kexp15_cipher;
+
+/* Provider implementation data */
+extern const OSSL_ALGORITHM GOST_prov_ciphers[];
+void GOST_prov_deinit_ciphers(void);
 
 struct gost_digest_st {
     struct gost_digest_st *template;
@@ -373,6 +386,7 @@ typedef struct gost_digest_st GOST_digest;
 EVP_MD *GOST_init_digest(GOST_digest *d);
 void GOST_deinit_digest(GOST_digest *d);
 
+/* ENGINE implementation data */
 extern GOST_digest GostR3411_94_digest;
 extern GOST_digest Gost28147_89_MAC_digest;
 extern GOST_digest Gost28147_89_mac_12_digest;
@@ -381,6 +395,10 @@ extern GOST_digest GostR3411_2012_512_digest;
 extern GOST_digest magma_mac_digest;
 extern GOST_digest grasshopper_mac_digest;
 extern GOST_digest kuznyechik_ctracpkm_omac_digest;
+
+/* Provider implementation data */
+extern const OSSL_ALGORITHM GOST_prov_digests[];
+void GOST_prov_deinit_digests(void);
 
 #endif
 /* vim: set expandtab cinoptions=\:0,l1,t0,g0,(0 sw=4 : */

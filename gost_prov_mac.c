@@ -144,7 +144,7 @@ static int mac_final(void *mctx, unsigned char *out, size_t *outl,
     if (out != NULL) {
         /* We ignore the error for GOST MDs that don't support setting
            the size */
-        EVP_MD_CTX_ctrl(gctx->dctx, EVP_MD_CTRL_XOF_LEN, gctx->mac_size, NULL);
+        EVP_MD_CTX_ctrl(gctx->dctx, EVP_MD_CTRL_XOF_LEN, (int)gctx->mac_size, NULL);
         ret = EVP_DigestFinal_ex(gctx->dctx, out, &tmpoutl);
     }
     if (outl != NULL)

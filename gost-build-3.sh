@@ -45,7 +45,7 @@ OPENSSL_SSL_LIBRARY="${OPENSSL_DIR}/lib/libssl.dylib"
 PKG_CONFIG_PATH="${OPENSSL_DIR}/lib/pkgconfig:${PKG_CONFIG_PATH}" 
 OPENSSL_CFLAGS="-march=native -std=gnu17" 
 OPENSSL_LIB_DIR="${OPENSSL_DIR}/lib"
-OPENSSL_CONF="${OPENSSL_DIR}/etc/openssl.cnf"
+OPENSSL_CONF="${OPENSSL_DIR}/etc/openssl/openssl.cnf"
 
 rm -rf build
 mkdir -p build

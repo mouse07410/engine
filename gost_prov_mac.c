@@ -139,7 +139,7 @@ static int mac_final(void *mctx, unsigned char *out, size_t *outl,
         return 0;
 
     /* for platforms where sizeof(int) != * sizeof(size_t) */
-    tmpoutl = *outl;
+    tmpoutl = (unsigned int)(*outl);
 
     if (out != NULL) {
         /* We ignore the error for GOST MDs that don't support setting

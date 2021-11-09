@@ -16,11 +16,11 @@ if [ -z ${OPENSSL_DIR} ]; then
     OPENSSL_DIR="$HOME/openssl-3"
     OPENSSL_ENGINES_DIR="${OPENSSL_DIR}/lib/engines-3"
     THREE="-3-"
-else
-    # Assume we're building for Macports OpenSSL-1.1.1x
-    OPENSSL_ENGINES_DIR="${OPENSSL_DIR}/lib/engines-1.1"
-    THREE="-"
-    CMAKE_BUILD_TYPE=Release
+#else
+#    # Assume we're building for Macports OpenSSL-1.1.1x
+#    OPENSSL_ENGINES_DIR="${OPENSSL_DIR}/lib/engines-1.1"
+#    THREE="-"
+#    CMAKE_BUILD_TYPE=Release
 fi
 
 if [ -z ${CC} ]; then

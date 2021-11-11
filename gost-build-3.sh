@@ -14,15 +14,19 @@ if [ -z ${OPENSSL_DIR} ]; then
     # Assume we are building for OpenSSL-3 (current master)
     LDFLAGS="" 
     OPENSSL_DIR="$HOME/openssl-3"
-else
-    OPENSSL_ROOT_DIR="${OPENSSL_DIR}"
+    #THREE="-3-"
+#else
+#    # Assume we're building for Macports OpenSSL-1.1.1x
+#    OPENSSL_ENGINES_DIR="${OPENSSL_DIR}/lib/engines-1.1"
+#    THREE="-"
+#    CMAKE_BUILD_TYPE=Release
 fi
 
 if [ -z ${ENGINESDIR} ]; then
-    OPENSSL_ENGINES_DIR="${OPENSSL_DIR}/lib/engines-3"
-else
-    OPENSSL_ENGINES_DIR="${ENGINESDIR}"
+    ENGINESDIR="${OPENSSL_DIR}/lib/engines-3"
 fi
+
+OPENSSL_ENGINES_DIR=${ENGINESDIR}
 
 if [ -z ${CC} ]; then
     CC="clang"
@@ -46,7 +50,13 @@ OPENSSL_SSL_LIBRARY="${OPENSSL_DIR}/lib/libssl.dylib"
 PKG_CONFIG_PATH="${OPENSSL_DIR}/lib/pkgconfig:${PKG_CONFIG_PATH}" 
 OPENSSL_CFLAGS="-march=native -std=gnu17" 
 OPENSSL_LIB_DIR="${OPENSSL_DIR}/lib"
-OPENSSL_CONF="${OPENSSL_DIR}/etc/openssl.cnf"
+OPENSSL_CONF="${OPENSSL_DIR}/etc/openssl/openssl.cnf"
+
+echo ""
+echo "OPENSSL_DIR=\"${OPENSSL_DIR}\""
+echo "ENGINESDIR=\"${ENGINESDIR}\""
+echo "OPENSSL_ROOT_DIR=\"${OPENSSL_ROOT_DIR}\""
+echo ""
 
 rm -rf build
 mkdir -p build

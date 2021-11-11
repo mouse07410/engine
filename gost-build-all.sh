@@ -10,9 +10,27 @@ if [ "$1" = "pull" ]; then
   git pull
 fi
 
-OPENSSL_DIR="" ENGINESDIR="" ./gost-build-3.sh 2>&1 | tee ossl3-build.txt && cp build/bin/gost.dylib ~/openssl-3/lib/engines-3/gost.3.0.dylib && ln -sf ~/openssl-3/lib/engines-3/gost.3.0.dylib ~/openssl-3/lib/engines-3/gost.dylib && cp build/bin/gost*sum ~/openssl-3/bin/
+O_DIR="" 
+E_DIR="" 
+THRE="-3-"
+THREE="${THRE}" EOPENSSL_DIR=${O_DIR} ENGINESDIR=${E_DIR} ./gost-build-3.sh 2>&1 | tee ossl3m-build.txt
+if [ -r build/bin/gost.dylib ]; then
+	cp build/bin/gost.dylib ${HOME}/openssl-3/lib/engines-3/gost.3.0.dylib
+	cp build/bin/gost*sum ${HOME}/openssl-3/bin/
+fi
 
-OPENSSL_DIR="/opt/local/libexec/openssl3" ENGINESDIR="/opt/local/libexec/openssl3/lib/engines-3" ./gost-build-3.sh 2>&1 | tee ossl3m-build.txt && sudo cp build/bin/gost.dylib /opt/local/libexec/openssl3/lib/engines-3/gost.3.0.dylib && sudo ln -sf /opt/local/libexec/openssl3/lib/engines-3/gost.3.0.dylib /opt/local/libexec/openssl3/lib/engines-3/gost.dylib && sudo ln -sf /opt/local/libexec/openssl3/lib/engines-3/gost.dylib /opt/local/lib/engines-3/gost.dylib && sudo cp build/bin/gost*sum /opt/local/bin/
+rm -rf build
+
+O_DIR="/opt/local/libexec/openssl3" 
+E_DIR="/opt/local/libexec/openssl3/lib/engines-3" 
+THRE="-3m-"
+THREE="${THRE}" OPENSSL_DIR=${O_DIR} ENGINESDIR=${E_DIR} ./gost-build-3.sh 2>&1 | tee ossl3-build.txt
+if [ -r build/bin/gost.dylib ]; then
+	sudo cp build/bin/gost.dylib ${E_DIR}/gost.3.0.dylib
+	sudo ln -sf ${E_DIR}/gost.3.0.dylib ${E_DIR}/gost.dylib
+	sudo ln -sf ${E_DIR}/gost.dylib /opt/local/lib/engines-3/
+	#sudo cp build/bin/gost*sum /opt/local/bin/
+fi
 
 git checkout openssl_1_1_1
 if [ "$1" = "pull" ]; then
@@ -21,6 +39,15 @@ fi
 
 rm -rf build
 
-OPENSSL_DIR=/opt/local/libexec/openssl11 ENGINESDIR=/opt/local/libexec/openssl11/lib/engines-1.1 ./gost-build-3.sh 2>&1 | tee ossl111-build.txt && sudo cp build/bin/gost.1.1.dylib /opt/local/libexec/openssl11/lib/engines-1.1/ && sudo cp build/bin/gost*sum /opt/local/bin/ && sudo ln -sf /opt/local/libexec/openssl11/lib/engines-1.1/gost.1.1.dylib /opt/local/libexec/openssl11/lib/engines-1.1/gost.dylib && sudo ln -sf /opt/local/libexec/openssl11/lib/engines-1.1/gost.dylib /opt/local/lib/engines-1.1/gost.dylib
+O_DIR=/opt/local/libexec/openssl11
+E_DIR=/opt/local/libexec/openssl11/lib/engines-1.1
+THRE="-"
+THREE="${THRE}" OPENSSL_DIR=${O_DIR} ENGINESDIR=${E_DIR} ./gost-build-3.sh 2>&1 | tee ossl111-build.txt
+if [ -r build/bin/gost.dylib ]; then
+	sudo cp build/bin/gost.1.1.dylib ${E_DIR}/
+	sudo ln -sf ${E_DIR}/gost.1.1.dylib ${E_DIR}/gost.dylib
+	sudo ln -sf ${E_DIR}/gost.dylib /opt/local/lib/engines-1.1/
+	sudo cp build/bin/gost*sum /opt/local/bin/ 
+fi
 
 git checkout master

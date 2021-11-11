@@ -10,9 +10,9 @@ if [ "$1" = "pull" ]; then
   git pull
 fi
 
-OPENSSL_DIR="" ./gost-build-3.sh 2>&1 | tee ossl3-build.txt && cp build/bin/gost.dylib ~/openssl-3/lib/engines-3/gost.3.0.dylib && cp build/bin/gost*sum ~/openssl-3/bin/
+OPENSSL_DIR="" ENGINESDIR="" ./gost-build-3.sh 2>&1 | tee ossl3-build.txt && cp build/bin/gost.dylib ~/openssl-3/lib/engines-3/gost.3.0.dylib && ln -sf ~/openssl-3/lib/engines-3/gost.3.0.dylib ~/openssl-3/lib/engines-3/gost.dylib && cp build/bin/gost*sum ~/openssl-3/bin/
 
-OPENSSL_DIR="/opt/local/libexec/openssl3" ./gost-build-3.sh 2>&1 | tee ossl3-build.txt && cp build/bin/gost.dylib ~/openssl-3/lib/engines-3/gost.3.0.dylib && cp build/bin/gost*sum ~/openssl-3/bin/
+OPENSSL_DIR="/opt/local/libexec/openssl3" ENGINESDIR="/opt/local/libexec/openssl3/lib/engines-3" ./gost-build-3.sh 2>&1 | tee ossl3m-build.txt && sudo cp build/bin/gost.dylib /opt/local/libexec/openssl3/lib/engines-3/gost.3.0.dylib && sudo ln -sf /opt/local/libexec/openssl3/lib/engines-3/gost.3.0.dylib /opt/local/libexec/openssl3/lib/engines-3/gost.dylib && sudo ln -sf /opt/local/libexec/openssl3/lib/engines-3/gost.dylib /opt/local/lib/engines-3/gost.dylib && sudo cp build/bin/gost*sum /opt/local/bin/
 
 git checkout openssl_1_1_1
 if [ "$1" = "pull" ]; then
@@ -21,6 +21,6 @@ fi
 
 rm -rf build
 
-OPENSSL_DIR=/opt/local/libexec/openssl11 ./gost-build-3.sh 2>&1 | tee ossl111-build.txt && sudo cp build/bin/gost.1.1.dylib /opt/local/libexec/openssl11/lib/engines-1.1/ && sudo cp build/bin/gost*sum /opt/local/bin/ && sudo ln -sf /opt/local/libexec/openssl11/lib/engines-1.1/gost.1.1.dylib /opt/local/lib/engines-1.1/
+OPENSSL_DIR=/opt/local/libexec/openssl11 ENGINESDIR=/opt/local/libexec/openssl11/lib/engines-1.1 ./gost-build-3.sh 2>&1 | tee ossl111-build.txt && sudo cp build/bin/gost.1.1.dylib /opt/local/libexec/openssl11/lib/engines-1.1/ && sudo cp build/bin/gost*sum /opt/local/bin/ && sudo ln -sf /opt/local/libexec/openssl11/lib/engines-1.1/gost.1.1.dylib /opt/local/libexec/openssl11/lib/engines-1.1/gost.dylib && sudo ln -sf /opt/local/libexec/openssl11/lib/engines-1.1/gost.dylib /opt/local/lib/engines-1.1/gost.dylib
 
 git checkout master

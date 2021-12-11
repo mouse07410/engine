@@ -5,6 +5,11 @@
  * See https://www.openssl.org/source/license.html for details
  */
 
+#ifdef _MSC_VER
+# pragma warning(push, 3)
+# include <openssl/applink.c>
+# pragma warning(pop)
+#endif
 #include <openssl/engine.h>
 #include <openssl/provider.h>
 #include <openssl/evp.h>
@@ -13,12 +18,19 @@
 #include <openssl/asn1.h>
 #include <string.h>
 
-#define T(e) ({ \
-    if (!(e)) {\
-	ERR_print_errors_fp(stderr);\
-	OpenSSLDie(__FILE__, __LINE__, #e);\
-    } \
-})
+#if defined _MSC_VER
+# include <malloc.h>
+# define alloca _alloca
+#elif defined __linux__
+# include <alloca.h>
+#endif
+#include <stdlib.h>
+
+#define T(e) \
+    if (!(e)) { \
+	ERR_print_errors_fp(stderr); \
+	OpenSSLDie(__FILE__, __LINE__, #e); \
+    }
 
 #define cRED	"\033[1;31m"
 #define cDRED	"\033[0;31m"
@@ -33,8 +45,10 @@
 	     else \
 		 printf(cGREEN "Test passed" cNORM "\n");}
 
+#ifdef __GNUC__
 /* Pragma to allow commenting out some tests. */
-#pragma GCC diagnostic ignored "-Wunused-const-variable"
+# pragma GCC diagnostic ignored "-Wunused-const-variable"
+#endif
 
 /*
  * Test keys from both GOST R 34.12-2015 and GOST R 34.13-2015,
@@ -304,12 +318,12 @@ static void hexdump(const void *ptr, size_t len)
 
 static int test_block(const EVP_CIPHER *type, const char *name, int block_size,
     const unsigned char *pt, const unsigned char *key, const unsigned char *exp,
-    size_t size, const unsigned char *iv, size_t iv_size, int acpkm,
+    const size_t size, const unsigned char *iv, size_t iv_size, int acpkm,
     int inplace)
 {
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     const char *standard = acpkm? "R 23565.1.017-2018" : "GOST R 34.13-2015";
-    unsigned char c[size];
+    unsigned char *c = alloca(size);
     int outlen, tmplen;
     int ret = 0, test;
 
@@ -332,7 +346,7 @@ static int test_block(const EVP_CIPHER *type, const char *name, int block_size,
     if (inplace)
 	memcpy(c, pt, size);
     else
-	memset(c, 0, sizeof(c));
+	memset(c, 0, size);
     if (acpkm) {
 	if (EVP_CIPHER_get0_provider(type) != NULL) {
 	    OSSL_PARAM params[] = { OSSL_PARAM_END, OSSL_PARAM_END };
@@ -366,7 +380,7 @@ static int test_block(const EVP_CIPHER *type, const char *name, int block_size,
     if (inplace)
 	memcpy(c, pt, size);
     else
-	memset(c, 0, sizeof(c));
+	memset(c, 0, size);
     if (acpkm) {
 	if (EVP_CIPHER_get0_provider(type) != NULL) {
 	    OSSL_PARAM params[] = { OSSL_PARAM_END, OSSL_PARAM_END };
@@ -404,7 +418,7 @@ static int test_block(const EVP_CIPHER *type, const char *name, int block_size,
     if (inplace)
 	memcpy(c, exp, size);
     else
-	memset(c, 0, sizeof(c));
+	memset(c, 0, size);
     if (acpkm) {
 	if (EVP_CIPHER_get0_provider(type) != NULL) {
 	    OSSL_PARAM params[] = { OSSL_PARAM_END, OSSL_PARAM_END };
@@ -433,10 +447,11 @@ static int test_block(const EVP_CIPHER *type, const char *name, int block_size,
 
 static int test_stream(const EVP_CIPHER *type, const char *name,
     const unsigned char *pt, const unsigned char *key, const unsigned char *exp,
-    size_t size, const unsigned char *iv, size_t iv_size, int acpkm)
+    const size_t size, const unsigned char *iv, size_t iv_size, int acpkm)
 {
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     const char *standard = acpkm? "R 23565.1.017-2018" : "GOST R 34.13-2015";
+    unsigned char *c = alloca(size);
     int ret = 0, test;
     int z;
 
@@ -448,7 +463,6 @@ static int test_stream(const EVP_CIPHER *type, const char *name,
     T(EVP_CIPHER_block_size(type) == 1);
 
     for (z = 1; z <= size; z++) {
-	unsigned char c[size];
 	int outlen, tmplen;
 	int sz = 0;
 	int i;
@@ -456,7 +470,7 @@ static int test_stream(const EVP_CIPHER *type, const char *name,
 	EVP_CIPHER_CTX_init(ctx);
 	T(EVP_CipherInit_ex(ctx, type, NULL, key, iv, 1));
 	T(EVP_CIPHER_CTX_set_padding(ctx, 0));
-	memset(c, 0xff, sizeof(c));
+	memset(c, 0xff, size);
 	if (acpkm) {
 	    if (EVP_CIPHER_get0_provider(type) != NULL) {
 		OSSL_PARAM params[] = { OSSL_PARAM_END, OSSL_PARAM_END };

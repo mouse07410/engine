@@ -7,6 +7,11 @@
  * See https://www.openssl.org/source/license.html for details
  */
 
+#ifdef _MSC_VER
+# pragma warning(push, 3)
+# include <openssl/applink.c>
+# pragma warning(pop)
+#endif
 #include <openssl/ec.h>
 #include <openssl/engine.h>
 #include <openssl/err.h>
@@ -15,12 +20,11 @@
 #include <string.h>
 #include "gost_lcl.h"
 
-#define T(e) ({ \
+#define T(e) \
     if (!(e)) { \
         ERR_print_errors_fp(stderr); \
         OpenSSLDie(__FILE__, __LINE__, #e); \
-    } \
-})
+    }
 
 #define cRED    "\033[1;31m"
 #define cDRED   "\033[0;31m"

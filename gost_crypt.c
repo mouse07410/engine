@@ -74,7 +74,7 @@ static int magma_cipher_ctl_acpkm_omac(EVP_CIPHER_CTX *ctx, int type, int arg, v
  * Note: that you cannot template 0 value.
  */
 #define TPL(st,field) ( \
-    ((st)->field) ?: TPL_VAL(st,field) \
+    ((st)->field) ? ((st)->field) : TPL_VAL(st,field) \
 )
 
 #define TPL_VAL(st,field) ( \
@@ -649,7 +649,7 @@ static void ctr64_inc(unsigned char *counter)
 static inline void apply_acpkm_magma(struct ossl_gost_cipher_ctx *
                                            ctx, unsigned int *num)
 {
-    if (!ctx->key_meshing || (*num < ctx->key_meshing))
+    if (!ctx->key_meshing || (*num < (unsigned int)ctx->key_meshing))
         return;
     acpkm_magma_key_meshing(&ctx->cctx);
     *num &= MAGMA_BLOCK_MASK;

@@ -7,6 +7,11 @@
  * See https://www.openssl.org/source/license.html for details
  */
 
+#ifdef _MSC_VER
+# pragma warning(push, 3)
+# include <openssl/applink.c>
+# pragma warning(pop)
+#endif
 #include "e_gost_err.h"
 #include "gost_lcl.h"
 #include <openssl/evp.h>
@@ -19,17 +24,17 @@
 #include <openssl/safestack.h>
 #include <string.h>
 
-#define T(e) ({ if (!(e)) { \
-		ERR_print_errors_fp(stderr); \
-		OpenSSLDie(__FILE__, __LINE__, #e); \
-	    } \
-        })
-#define TE(e) ({ if (!(e)) { \
-		ERR_print_errors_fp(stderr); \
-		fprintf(stderr, "Error at %s:%d %s\n", __FILE__, __LINE__, #e); \
-		return -1; \
-	    } \
-        })
+#define T(e) \
+    if (!(e)) { \
+        ERR_print_errors_fp(stderr); \
+        OpenSSLDie(__FILE__, __LINE__, #e); \
+    }
+#define TE(e) \
+    if (!(e)) { \
+        ERR_print_errors_fp(stderr); \
+        fprintf(stderr, "Error at %s:%d %s\n", __FILE__, __LINE__, #e); \
+        return -1; \
+    }
 
 #define cRED	"\033[1;31m"
 #define cDRED	"\033[0;31m"
@@ -1127,7 +1132,7 @@ static int test_param(struct test_param *t)
 	T(mdtype = EVP_get_digestbynid(hash_nid));
 	T(EVP_VerifyInit(md_ctx, mdtype));
 	/* Feed byte-by-byte. */
-	int i;
+	size_t i;
 	for (i = 0; i < t->data_len; i++)
 	    T(EVP_VerifyUpdate(md_ctx, &t->data[i], 1));
 	err = EVP_VerifyFinal(md_ctx, sig, siglen, pkey);

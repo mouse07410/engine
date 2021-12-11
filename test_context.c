@@ -5,6 +5,11 @@
  * See https://www.openssl.org/source/license.html for details
  */
 
+#ifdef _MSC_VER
+# pragma warning(push, 3)
+# include <openssl/applink.c>
+# pragma warning(pop)
+#endif
 #include <openssl/engine.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -15,9 +20,10 @@
 # include "gost_lcl.h"
 #endif
 
-#define T(e) if (!(e)) {\
-	ERR_print_errors_fp(stderr);\
-	OpenSSLDie(__FILE__, __LINE__, #e);\
+#define T(e) \
+    if (!(e)) { \
+        ERR_print_errors_fp(stderr); \
+        OpenSSLDie(__FILE__, __LINE__, #e); \
     }
 
 #define cRED	"\033[1;31m"

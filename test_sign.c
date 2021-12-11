@@ -7,6 +7,11 @@
  * See https://www.openssl.org/source/license.html for details
  */
 
+#ifdef _MSC_VER
+# pragma warning(push, 3)
+# include <openssl/applink.c>
+# pragma warning(pop)
+#endif
 #include "gost_lcl.h"
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -20,17 +25,17 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define T(e) ({ if (!(e)) { \
-		ERR_print_errors_fp(stderr); \
-		OpenSSLDie(__FILE__, __LINE__, #e); \
-	    } \
-        })
-#define TE(e) ({ if (!(e)) { \
-		ERR_print_errors_fp(stderr); \
-		fprintf(stderr, "Error at %s:%d %s\n", __FILE__, __LINE__, #e); \
-		return -1; \
-	    } \
-        })
+#define T(e) \
+    if (!(e)) { \
+        ERR_print_errors_fp(stderr); \
+        OpenSSLDie(__FILE__, __LINE__, #e); \
+    }
+#define TE(e) \
+    if (!(e)) { \
+        ERR_print_errors_fp(stderr); \
+        fprintf(stderr, "Error at %s:%d %s\n", __FILE__, __LINE__, #e); \
+        return -1; \
+    }
 
 #define cRED	"\033[1;31m"
 #define cDRED	"\033[0;31m"
@@ -47,7 +52,7 @@
 
 struct test_sign {
     const char *name;
-    unsigned int nid;
+    int nid;
     size_t bits;
     const char *paramset;
 };
@@ -239,7 +244,7 @@ static int test_sign(struct test_sign *t)
     const EC_GROUP *group = EC_KEY_get0_group(ec);
     int curve_name = EC_GROUP_get_curve_name(group);
     err = curve_name == t->nid;
-    printf("\tcurve_name (%u):\t", t->nid);
+    printf("\tcurve_name (%d):\t", t->nid);
     print_test_tf(err, curve_name, "match", "mismatch");
     ret |= !err;
 

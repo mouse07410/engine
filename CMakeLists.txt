@@ -58,7 +58,7 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "MSVC")
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   add_definitions(-D_CRT_DEPRECATED_NO_WARNINGS)
   add_definitions(-D_CRT_NONSTDC_NO_WARNINGS)
-  add_compile_options(/MP /WX /W4 /wd4100 /wd4267 /wd4206 /wd4706 /wd4244 /wd4115)
+  add_compile_options(/MP /WX /W4 /wd4100 /wd4267 /wd4206 /wd4706 /wd4244 /wd4115 /wd4996)
 endif()
 
 if (ASAN)
@@ -66,11 +66,6 @@ if (ASAN)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -g3 -fno-omit-frame-pointer")
   set(SKIP_PERL_TESTS 1)
 endif()
-
-# DEPRECATEDIN_3_0 CMAC
-set_source_files_properties(gost_omac.c PROPERTIES COMPILE_FLAGS -Wno-error=deprecated-declarations)
-# DEPRECATEDIN_3_0 HMAC
-set_source_files_properties(gost_keyexpimp.c PROPERTIES COMPILE_FLAGS -Wno-error=deprecated-declarations)
 
 set(CMAKE_C_STANDARD 90)
 CHECK_FUNCTION_EXISTS(clock_gettime HAVE_CLOCK_GETTIME_C)
@@ -117,7 +112,11 @@ if (NOT RELAXED_ALIGNMENT)
   add_definitions(-DSTRICT_ALIGNMENT)
 endif()
 
-set(BIN_DIRECTORY bin)
+if(MSVC)
+  set(BIN_DIRECTORY bin/$<CONFIG>/)
+else()
+  set(BIN_DIRECTORY bin)
+endif()
 
 set(OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${BIN_DIRECTORY})
 
@@ -289,11 +288,13 @@ add_test(NAME sign/verify-with-engine COMMAND test_sign)
 set_tests_properties(sign/verify-with-engine
   PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT_ENGINE}")
 
-add_executable(test_tls test_tls.c)
-target_link_libraries(test_tls OpenSSL::SSL)
-add_test(NAME TLS-with-engine COMMAND test_tls)
-set_tests_properties(TLS-with-engine
-  PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT_ENGINE}")
+if(NOT MSVC)
+  add_executable(test_tls test_tls.c)
+  target_link_libraries(test_tls OpenSSL::SSL)
+  add_test(NAME TLS-with-engine COMMAND test_tls)
+  set_tests_properties(TLS-with-engine
+    PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT_ENGINE}")
+endif()
 
 add_executable(test_context test_context.c)
 target_link_libraries(test_context OpenSSL::Crypto)
@@ -317,8 +318,9 @@ add_test(NAME gost89 COMMAND test_gost89)
 
 if(NOT SKIP_PERL_TESTS)
     execute_process(COMMAND perl -MTest2::V0 -e ""
-	ERROR_QUIET RESULT_VARIABLE HAVE_TEST2_V0)
-    if(NOT HAVE_TEST2_V0)
+       ERROR_QUIET RESULT_VARIABLE MISSING_TEST2_V0)
+    find_program(HAVE_PROVE NAMES prove)
+    if(NOT MISSING_TEST2_V0 AND HAVE_PROVE)
 	add_test(NAME engine
 	    COMMAND prove --merge -PWrapOpenSSL ${CMAKE_CURRENT_SOURCE_DIR}/test :: engine)
 	set_tests_properties(engine PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT_ENGINE}")
@@ -330,8 +332,10 @@ if(NOT SKIP_PERL_TESTS)
     endif()
 endif()
 
-add_executable(sign benchmark/sign.c)
-target_link_libraries(sign gost_core gost_err ${CLOCK_GETTIME_LIB})
+if(NOT MSVC)
+  add_executable(sign benchmark/sign.c)
+  target_link_libraries(sign gost_core gost_err ${CLOCK_GETTIME_LIB})
+endif()
 
 # All that may need to load just built engine will have path to it defined.
 set(BINARY_TESTS_TARGETS
@@ -344,8 +348,10 @@ set(BINARY_TESTS_TARGETS
         test_context
         test_keyexpimp
         test_gost89
-	test_tls
         )
+if(NOT MSVC)
+  list(APPEND BINARY_TESTS_TARGETS test_tls)
+endif()
 set_property(TARGET ${BINARY_TESTS_TARGETS} APPEND PROPERTY COMPILE_DEFINITIONS ENGINE_DIR="${OUTPUT_DIRECTORY}")
 
 add_library(gost_core STATIC ${GOST_LIB_SOURCE_FILES})
@@ -363,6 +369,7 @@ set_target_properties(gost_engine PROPERTIES
   PREFIX "" OUTPUT_NAME "gost" SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX})
 target_link_libraries(gost_engine PRIVATE gost_core gost_err)
 
+if (NOT MSVC)
 # The GOST engine in library form
 add_library(lib_gost_engine SHARED ${GOST_ENGINE_SOURCE_FILES})
 set_target_properties(lib_gost_engine PROPERTIES
@@ -370,7 +377,7 @@ set_target_properties(lib_gost_engine PROPERTIES
   PUBLIC_HEADER gost-engine.h
   OUTPUT_NAME "gost")
 target_link_libraries(lib_gost_engine PRIVATE gost_core gost_err)
-
+endif()
 
 # The GOST provider uses this
 add_subdirectory(libprov)
@@ -385,6 +392,7 @@ set_target_properties(gost_prov PROPERTIES
   )
 target_link_libraries(gost_prov PRIVATE gost_core libprov)
 
+if (NOT MSVC)
 # The GOST provider in library form
 add_library(lib_gost_prov SHARED
   ${GOST_PROV_SOURCE_FILES} ${GOST_ENGINE_SOURCE_FILES}
@@ -394,6 +402,7 @@ set_target_properties(lib_gost_prov PROPERTIES
   COMPILE_DEFINITIONS "BUILDING_GOST_PROVIDER;BUILDING_PROVIDER_AS_LIBRARY;OPENSSL_NO_DYNAMIC_ENGINE"
   )
 target_link_libraries(lib_gost_prov PRIVATE gost_core libprov)
+endif()
 
 set(GOST_SUM_SOURCE_FILES
         gostsum.c
@@ -430,26 +439,26 @@ target_link_libraries(test_tlstree PUBLIC OpenSSL::Crypto)
 install(TARGETS gostsum gost12sum RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES gostsum.1 gost12sum.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
-# install engine in library and module form
-install(TARGETS lib_gost_engine EXPORT GostEngineConfig LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+# install engine and provider in module form
 install(TARGETS gost_engine EXPORT GostEngineConfig
         LIBRARY  DESTINATION ${OPENSSL_ENGINES_DIR}
         RUNTIME  DESTINATION ${OPENSSL_ENGINES_DIR})
-# install provider in library and module form
-install(TARGETS lib_gost_prov EXPORT GostProviderConfig
-        LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(TARGETS gost_prov EXPORT GostProviderConfig
         LIBRARY  DESTINATION ${OPENSSL_MODULES_DIR}
         RUNTIME  DESTINATION ${OPENSSL_MODULES_DIR})
+if (NOT MSVC)
+# install engine and provider in library form
+install(TARGETS lib_gost_engine EXPORT GostEngineConfig
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS lib_gost_prov EXPORT GostProviderConfig
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
+
 if (MSVC)
-  install(FILES $<TARGET_PDB_FILE:lib_gost_engine>
-    EXPORT GostEngineConfig DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
   install(FILES $<TARGET_PDB_FILE:gostsum> $<TARGET_PDB_FILE:gost12sum>
     EXPORT GostEngineConfig DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
   install(FILES $<TARGET_PDB_FILE:gost_engine>
     EXPORT GostEngineConfig DESTINATION ${OPENSSL_ENGINES_DIR} OPTIONAL)
-  install(FILES $<TARGET_PDB_FILE:lib_gost_prov>
-    EXPORT GostProviderConfig DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
   install(FILES $<TARGET_PDB_FILE:gost_prov>
     EXPORT GostProviderConfig DESTINATION ${OPENSSL_MODULES_DIR} OPTIONAL)
 endif()

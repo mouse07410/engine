@@ -906,7 +906,6 @@ static int gost_grasshopper_cipher_ctl(EVP_CIPHER_CTX *ctx, int type, int arg, v
 
       return gost2015_process_unprotected_attributes(x, arg, KUZNYECHIK_MAC_MAX_SIZE, c->tag);
     }
-    return 1;
     case EVP_CTRL_COPY: {
         EVP_CIPHER_CTX *out = ptr;
 
@@ -934,7 +933,7 @@ static int gost_grasshopper_cipher_ctl(EVP_CIPHER_CTX *ctx, int type, int arg, v
 }
 
 /* Called directly by CMAC_ACPKM_Init() */
-const GRASSHOPPER_INLINE EVP_CIPHER *cipher_gost_grasshopper_ctracpkm()
+const EVP_CIPHER *cipher_gost_grasshopper_ctracpkm()
 {
     return GOST_init_cipher(&grasshopper_ctr_acpkm_cipher);
 }

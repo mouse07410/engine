@@ -4,7 +4,15 @@
  * Contents licensed under the terms of the OpenSSL license
  * See https://www.openssl.org/source/license.html for details
  */
-#include <arpa/inet.h>
+#ifdef _MSC_VER
+# pragma warning(push, 3)
+# include <openssl/applink.c>
+# pragma warning(pop)
+# include <Winsock2.h>
+# include <stdlib.h>
+#else
+# include <arpa/inet.h>
+#endif
 #include <string.h>
 #include <stdio.h>
 #include <string.h>
@@ -15,9 +23,10 @@
 #include "e_gost_err.h"
 #include "gost_grasshopper_cipher.h"
 
-#define T(e) if (!(e)) {\
-        ERR_print_errors_fp(stderr);\
-        OpenSSLDie(__FILE__, __LINE__, #e);\
+#define T(e) \
+    if (!(e)) { \
+        ERR_print_errors_fp(stderr); \
+        OpenSSLDie(__FILE__, __LINE__, #e); \
     }
 
 static void hexdump(FILE *f, const char *title, const unsigned char *s, int l)
@@ -103,7 +112,11 @@ int main(void)
     unsigned char tlsseq[8];
     unsigned char out[32];
 
+#ifdef _MSC_VER
+    _putenv_s("OPENSSL_ENGINES", ENGINE_DIR);
+#else
     setenv("OPENSSL_ENGINES", ENGINE_DIR, 0);
+#endif
     OPENSSL_add_all_algorithms_conf();
     ERR_load_crypto_strings();
     ENGINE *eng;

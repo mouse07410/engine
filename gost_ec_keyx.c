@@ -292,6 +292,8 @@ static int pkey_GOST_ECcp_encrypt(EVP_PKEY_CTX *pctx, unsigned char *out,
     int key_is_ephemeral = 1;
     gost_ctx cctx;
     EVP_PKEY *sec_key = EVP_PKEY_CTX_get0_peerkey(pctx);
+    int res_len = 0;
+
     if (data->shared_ukm_size) {
         memcpy(ukm, data->shared_ukm, 8);
     } else {
@@ -373,8 +375,26 @@ static int pkey_GOST_ECcp_encrypt(EVP_PKEY_CTX *pctx, unsigned char *out,
             goto err;
         }
     }
-    if ((*out_len = i2d_GOST_KEY_TRANSPORT(gkt, out ? &out : NULL)) > 0)
+    res_len = i2d_GOST_KEY_TRANSPORT(gkt, NULL);
+    if (res_len <= 0) {
+        GOSTerr(GOST_F_PKEY_GOST_ECCP_ENCRYPT, ERR_R_ASN1_LIB);
+        goto err;
+    }
+
+    if (out == NULL) {
+        *out_len = res_len;
         ret = 1;
+    } else {
+        if ((size_t)res_len > *out_len) {
+            GOSTerr(GOST_F_PKEY_GOST_ECCP_ENCRYPT, GOST_R_INVALID_BUFFER_SIZE);
+            goto err;
+        }
+        if ((*out_len = i2d_GOST_KEY_TRANSPORT(gkt, &out)) > 0)
+            ret = 1;
+        else
+            GOSTerr(GOST_F_PKEY_GOST_ECCP_ENCRYPT, ERR_R_ASN1_LIB);
+    }
+
     OPENSSL_cleanse(shared_key, sizeof(shared_key));
     GOST_KEY_TRANSPORT_free(gkt);
     return ret;
@@ -406,6 +426,7 @@ static int pkey_gost2018_encrypt(EVP_PKEY_CTX *pctx, unsigned char *out,
     int exp_len = 0, iv_len = 0;
     unsigned char *exp_buf = NULL;
     int key_is_ephemeral = 0;
+    int res_len = 0;
 
     switch (data->cipher_nid) {
     case NID_magma_ctr:
@@ -499,8 +520,26 @@ static int pkey_gost2018_encrypt(EVP_PKEY_CTX *pctx, unsigned char *out,
         goto err;
     }
 
-    if ((*out_len = i2d_PSKeyTransport_gost(pst, out ? &out : NULL)) > 0)
+    res_len = i2d_PSKeyTransport_gost(pst, NULL);
+    if (res_len <= 0) {
+        GOSTerr(GOST_F_PKEY_GOST2018_ENCRYPT, ERR_R_ASN1_LIB);
+        goto err;
+    }
+
+    if (out == NULL) {
+        *out_len = res_len;
         ret = 1;
+    } else {
+        if ((size_t)res_len > *out_len) {
+            GOSTerr(GOST_F_PKEY_GOST2018_ENCRYPT, GOST_R_INVALID_BUFFER_SIZE);
+            goto err;
+        }
+        if ((*out_len = i2d_PSKeyTransport_gost(pst, &out)) > 0)
+            ret = 1;
+        else
+            GOSTerr(GOST_F_PKEY_GOST2018_ENCRYPT, ERR_R_ASN1_LIB);
+    }
+
  err:
     OPENSSL_cleanse(expkeys, sizeof(expkeys));
     if (key_is_ephemeral)
@@ -550,10 +589,6 @@ static int pkey_GOST_ECcp_decrypt(EVP_PKEY_CTX *pctx, unsigned char *key,
     EVP_PKEY *eph_key = NULL, *peerkey = NULL;
     int dgst_nid = NID_undef;
 
-    if (!key) {
-        *key_len = 32;
-        return 1;
-    }
     gkt = d2i_GOST_KEY_TRANSPORT(NULL, (const unsigned char **)&p, in_len);
     if (!gkt) {
         GOSTerr(GOST_F_PKEY_GOST_ECCP_DECRYPT,
@@ -613,6 +648,7 @@ static int pkey_GOST_ECcp_decrypt(EVP_PKEY_CTX *pctx, unsigned char *key,
         goto err;
     }
 
+    *key_len = 32;
     ret = 1;
  err:
     OPENSSL_cleanse(sharedKey, sizeof(sharedKey));
@@ -630,15 +666,23 @@ static int pkey_gost2018_decrypt(EVP_PKEY_CTX *pctx, unsigned char *key,
                           size_t in_len)
 {
     const unsigned char *p = in;
-    struct gost_pmeth_data *data = EVP_PKEY_CTX_get_data(pctx);
-    EVP_PKEY *priv = EVP_PKEY_CTX_get0_pkey(pctx);
+    struct gost_pmeth_data *data;
+    EVP_PKEY *priv;
     PSKeyTransport_gost *pst = NULL;
     int ret = 0;
     unsigned char expkeys[64];
     EVP_PKEY *eph_key = NULL;
-    int pkey_nid = EVP_PKEY_base_id(priv);
+    int pkey_nid;
     int mac_nid = NID_undef;
     int iv_len = 0;
+
+    if (!(data = EVP_PKEY_CTX_get_data(pctx)) ||
+        !(priv = EVP_PKEY_CTX_get0_pkey(pctx))) {
+       GOSTerr(GOST_F_PKEY_GOST2018_DECRYPT, GOST_R_ERROR_COMPUTING_EXPORT_KEYS);
+       ret = 0;
+       goto err;
+    }
+    pkey_nid = EVP_PKEY_base_id(priv);
 
     switch (data->cipher_nid) {
     case NID_magma_ctr:
@@ -653,10 +697,6 @@ static int pkey_gost2018_decrypt(EVP_PKEY_CTX *pctx, unsigned char *key,
         GOSTerr(GOST_F_PKEY_GOST2018_DECRYPT, GOST_R_INVALID_CIPHER);
         return -1;
         break;
-    }
-    if (!key) {
-        *key_len = 32;
-        return 1;
     }
 
     pst = d2i_PSKeyTransport_gost(NULL, (const unsigned char **)&p, in_len);
@@ -678,13 +718,13 @@ static int pkey_gost2018_decrypt(EVP_PKEY_CTX *pctx, unsigned char *key,
 
    o  q * Q_eph is not equal to zero point.
 */
-    if (eph_key == NULL || priv == NULL || data == NULL) {
+    if (eph_key == NULL) {
        GOSTerr(GOST_F_PKEY_GOST2018_DECRYPT,
                GOST_R_ERROR_COMPUTING_EXPORT_KEYS);
        ret = 0;
        goto err;
     }
-  
+
     if (data->shared_ukm_size == 0 && pst->ukm != NULL) {
         if (EVP_PKEY_CTX_ctrl(pctx, -1, -1, EVP_PKEY_CTRL_SET_IV,
         ASN1_STRING_length(pst->ukm), (void *)ASN1_STRING_get0_data(pst->ukm)) < 0) {
@@ -709,6 +749,7 @@ static int pkey_gost2018_decrypt(EVP_PKEY_CTX *pctx, unsigned char *key,
         goto err;
     }
 
+    *key_len = 32;
     ret = 1;
  err:
     OPENSSL_cleanse(expkeys, sizeof(expkeys));
@@ -721,6 +762,17 @@ int pkey_gost_decrypt(EVP_PKEY_CTX *pctx, unsigned char *key,
                       size_t *key_len, const unsigned char *in, size_t in_len)
 {
     struct gost_pmeth_data *gctx = EVP_PKEY_CTX_get_data(pctx);
+
+    if (key == NULL) {
+        *key_len = 32;
+        return 1;
+    }
+
+    if (key != NULL && *key_len < 32) {
+        GOSTerr(GOST_F_PKEY_GOST2018_ENCRYPT, GOST_R_INVALID_BUFFER_SIZE);
+        return 0;
+    }
+
     switch (gctx->cipher_nid)
     {
         case NID_id_Gost28147_89:

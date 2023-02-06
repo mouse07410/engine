@@ -32,9 +32,9 @@ if [ -z ${CC} ]; then
     CC="clang"
 fi
 
-if [ -z "${OPENSSL_ROOT_DIR}" ]; then
+#if [ -z "${OPENSSL_ROOT_DIR}" ]; then
     export OPENSSL_ROOT_DIR=${OPENSSL_DIR}
-fi
+#fi
 
 if [ -z ${DEBUG} ]; then
     # DEBUG not set, building Release

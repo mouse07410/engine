@@ -12,10 +12,15 @@ find_package(OpenSSL 3.0 REQUIRED)
 
 message(STATUS "Found OpenSSL ${OPENSSL_VERSION_MAJOR}.${OPENSSL_VERSION_MINOR}.${OPENSSL_VERSION_PATCH}.${OPENSSL_VERSION_TWEAK}")
 
-message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'RelWithDebInfo' as none was specified.")
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of build." FORCE)
+else()
+  message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+endif()
 
 if(NOT DEFINED OPENSSL_VERSION_MAJOR OR DEFINED USE_DEVEL)
-   message(STATUS "OpenSSL version values were not properly defined (OpenSSL-3 issue), setting to 3.0")
+   message(STATUS "Setting to OpenSSL version 3.2dev in $HOME/openssl-3")
    set(OPENSSL_VERSION_MAJOR "3")
    set(OPENSSL_VERSION_MINOR "2")
    set(OPENSSL_INCLUDE_DIR "$HOME/openssl-3/include")

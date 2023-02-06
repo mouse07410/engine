@@ -130,7 +130,7 @@ static int mac_final(void *mctx, unsigned char *out, size_t *outl,
                      size_t outsize)
 {
     GOST_CTX *gctx = mctx;
-    unsigned int tmpoutl;
+    //unsigned int tmpoutl;
     int ret = 0;
 
     /* This is strange code...  but it duplicates pkey_gost_mac_signctx() */
@@ -139,7 +139,7 @@ static int mac_final(void *mctx, unsigned char *out, size_t *outl,
         return 0;
 
     /* for platforms where sizeof(int) != * sizeof(size_t) */
-    tmpoutl = (unsigned int)(*outl);
+    //tmpoutl = (unsigned int)*outl;
 
     if (out != NULL) {
         /* We ignore the error for GOST MDs that don't support setting
@@ -150,8 +150,7 @@ static int mac_final(void *mctx, unsigned char *out, size_t *outl,
     }
     if (outl != NULL)
         *outl = (size_t)gctx->mac_size;
-    else
-        *outl = (size_t)tmpoutl;
+
     return ret;
 }
 

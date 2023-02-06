@@ -8,6 +8,7 @@
  **********************************************************************/
 
 #include <openssl/core_dispatch.h>
+#include <openssl/core_names.h>
 #include "gost_prov.h"
 #include "gost_lcl.h"
 #include "prov/err.h"           /* libprov err functions */
@@ -48,7 +49,7 @@ static void provider_ctx_free(PROV_CTX *ctx)
         proverr_free_handle(ctx->proverr_handle);
         OSSL_LIB_CTX_free(ctx->libctx);
     }
-    free(ctx);
+    OPENSSL_free(ctx);
 }
 
 extern int populate_gost_engine(ENGINE *e);
@@ -57,7 +58,7 @@ static PROV_CTX *provider_ctx_new(const OSSL_CORE_HANDLE *core,
 {
     PROV_CTX *ctx;
 
-    if ((ctx = malloc(sizeof(*ctx))) != NULL
+    if ((ctx = OPENSSL_zalloc(sizeof(*ctx))) != NULL
         && (ctx->proverr_handle = proverr_new_handle(core, in)) != NULL
         && (ctx->libctx = OSSL_LIB_CTX_new()) != NULL
         && (ctx->e = ENGINE_new()) != NULL
@@ -99,6 +100,15 @@ static const OSSL_ALGORITHM *gost_operation(void *vprovctx,
 
 static int gost_get_params(void *provctx, OSSL_PARAM *params)
 {
+    OSSL_PARAM *p;
+
+    p = OSSL_PARAM_locate(params, OSSL_PROV_PARAM_NAME);
+    if (p != NULL && !OSSL_PARAM_set_utf8_ptr(p, "OpenSSL GOST Provider"))
+        return 0;
+    p = OSSL_PARAM_locate(params, OSSL_PROV_PARAM_STATUS);
+    if (p != NULL && !OSSL_PARAM_set_int(p, 1)) /* We never fail. */
+        return 0;
+
     return 1;
 }
 

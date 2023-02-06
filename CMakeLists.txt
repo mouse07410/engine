@@ -12,15 +12,20 @@ find_package(OpenSSL 3.0 REQUIRED)
 
 message(STATUS "Found OpenSSL ${OPENSSL_VERSION_MAJOR}.${OPENSSL_VERSION_MINOR}.${OPENSSL_VERSION_PATCH}.${OPENSSL_VERSION_TWEAK}")
 
-message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'RelWithDebInfo' as none was specified.")
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of build." FORCE)
+else()
+  message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+endif()
 
-if(NOT DEFINED OPENSSL_VERSION_MAJOR)
-   message(STATUS "OpenSSL version values were not properly defined (OpenSSL-3 issue), setting to 3.0")
+if(NOT DEFINED OPENSSL_VERSION_MAJOR OR DEFINED USE_DEVEL)
+   message(STATUS "Setting to OpenSSL version 3.2dev in $HOME/openssl-3")
    set(OPENSSL_VERSION_MAJOR "3")
-   set(OPENSSL_VERSION_MINOR "0")
-   #set(OPENSSL_INCLUDE_DIR "$HOME/openssl-3/include")
-   #set(OPENSSL_CRYPTO_LIBRARY "$HOME/openssl-3/lib/libcrypto.dylib")
-endif(NOT DEFINED OPENSSL_VERSION_MAJOR)
+   set(OPENSSL_VERSION_MINOR "2")
+   set(OPENSSL_INCLUDE_DIR "$HOME/openssl-3/include")
+   set(OPENSSL_CRYPTO_LIBRARY "$HOME/openssl-3/lib/libcrypto.dylib")
+endif(NOT DEFINED OPENSSL_VERSION_MAJOR OR DEFINED USE_DEVEL)
 
 message(STATUS "Found OpenSSL includes:   ${OPENSSL_INCLUDE_DIR}")
 message(STATUS "Found OpenSSL crypto lib: ${OPENSSL_CRYPTO_LIBRARY}")
@@ -288,13 +293,11 @@ add_test(NAME sign/verify-with-engine COMMAND test_sign)
 set_tests_properties(sign/verify-with-engine
   PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT_ENGINE}")
 
-if(NOT MSVC)
-  add_executable(test_tls test_tls.c)
-  target_link_libraries(test_tls OpenSSL::SSL)
-  add_test(NAME TLS-with-engine COMMAND test_tls)
-  set_tests_properties(TLS-with-engine
-    PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT_ENGINE}")
-endif()
+add_executable(test_tls test_tls.c)
+target_link_libraries(test_tls OpenSSL::SSL)
+add_test(NAME TLS-with-engine COMMAND test_tls)
+set_tests_properties(TLS-with-engine
+  PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT_ENGINE}")
 
 add_executable(test_context test_context.c)
 target_link_libraries(test_context OpenSSL::Crypto)
@@ -315,6 +318,15 @@ add_test(NAME keyexpimp COMMAND test_keyexpimp)
 add_executable(test_gost89 test_gost89.c)
 target_link_libraries(test_gost89 gost_core gost_err)
 add_test(NAME gost89 COMMAND test_gost89)
+
+add_executable(test_mgm test_mgm.c)
+target_link_libraries(test_mgm OpenSSL::Crypto)
+add_test(NAME mgm-with-engine COMMAND test_mgm)
+set_tests_properties(mgm-with-engine
+  PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT_ENGINE}")
+add_test(NAME mgm-with-provider COMMAND test_mgm)
+set_tests_properties(mgm-with-provider
+  PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT_PROVIDER}")
 
 if(NOT SKIP_PERL_TESTS)
     execute_process(COMMAND perl -MTest2::V0 -e ""
@@ -348,10 +360,9 @@ set(BINARY_TESTS_TARGETS
         test_context
         test_keyexpimp
         test_gost89
+        test_tls
+        test_mgm
         )
-if(NOT MSVC)
-  list(APPEND BINARY_TESTS_TARGETS test_tls)
-endif()
 set_property(TARGET ${BINARY_TESTS_TARGETS} APPEND PROPERTY COMPILE_DEFINITIONS ENGINE_DIR="${OUTPUT_DIRECTORY}")
 
 add_library(gost_core STATIC ${GOST_LIB_SOURCE_FILES})
@@ -462,5 +473,5 @@ if (MSVC)
   install(FILES $<TARGET_PDB_FILE:gost_prov>
     EXPORT GostProviderConfig DESTINATION ${OPENSSL_MODULES_DIR} OPTIONAL)
 endif()
-install(EXPORT GostEngineConfig DESTINATION GostEngine/share/cmake/GostEngine)
-install(EXPORT GostProviderConfig DESTINATION GostEngine/share/cmake/GostProvider)
+install(EXPORT GostEngineConfig DESTINATION share/cmake/GostEngine)
+install(EXPORT GostProviderConfig DESTINATION share/cmake/GostProvider)

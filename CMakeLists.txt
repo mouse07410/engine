@@ -14,12 +14,12 @@ message(STATUS "Found OpenSSL ${OPENSSL_VERSION_MAJOR}.${OPENSSL_VERSION_MINOR}.
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
-if(NOT DEFINED OPENSSL_VERSION_MAJOR)
+if(NOT DEFINED OPENSSL_VERSION_MAJOR OR DEFINED USE_DEVEL)
    message(STATUS "OpenSSL version values were not properly defined (OpenSSL-3 issue), setting to 3.0")
    set(OPENSSL_VERSION_MAJOR "3")
-   set(OPENSSL_VERSION_MINOR "0")
-   #set(OPENSSL_INCLUDE_DIR "$HOME/openssl-3/include")
-   #set(OPENSSL_CRYPTO_LIBRARY "$HOME/openssl-3/lib/libcrypto.dylib")
+   set(OPENSSL_VERSION_MINOR "2")
+   set(OPENSSL_INCLUDE_DIR "$HOME/openssl-3/include")
+   set(OPENSSL_CRYPTO_LIBRARY "$HOME/openssl-3/lib/libcrypto.dylib")
 endif(NOT DEFINED OPENSSL_VERSION_MAJOR)
 
 message(STATUS "Found OpenSSL includes:   ${OPENSSL_INCLUDE_DIR}")

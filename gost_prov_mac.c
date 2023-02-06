@@ -150,6 +150,8 @@ static int mac_final(void *mctx, unsigned char *out, size_t *outl,
     }
     if (outl != NULL)
         *outl = (size_t)gctx->mac_size;
+    else
+        *outl = (size_t)tmpoutl;
     return ret;
 }
 

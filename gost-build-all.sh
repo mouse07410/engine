@@ -17,8 +17,8 @@ THRE="-3-"
 THREE="${THRE}" USE_DEVEL="True" OPENSSL_DIR=${O_DIR} ENGINESDIR=${E_DIR} ./gost-build-3.sh 2>&1 | tee ossl3m-build.txt
 if [ -r build/bin/gost.dylib ]; then
 	cp build/bin/gost.dylib ${HOME}/openssl-3/lib/engines-3/gost.3.0.dylib
-	cp build/bin/gostprov.dylib ${HOME}/openssl-3/lib/ossl-modules/
-	ln -sf ${HOME}/openssl-3/lib/engines-3/gost.3.0.dylib ${HOME}/openssl-3/lib/engines-3/gost.dylib
+   	ln -sf ${HOME}/openssl-3/lib/engines-3/gost.3.0.dylib ${HOME}/openssl-3/lib/engines-3/gost.dylib
+   	cp build/bin/gostprov.dylib ${HOME}/openssl-3/lib/ossl-modules/
 	cp build/bin/gost*sum ${HOME}/openssl-3/bin/
 fi
 

@@ -56,7 +56,6 @@ if [ -d ${O_DIR} ]; then
 		sudo cp build/bin/gost.1.1.dylib ${E_DIR}/
 		sudo ln -sf ${E_DIR}/gost.1.1.dylib ${E_DIR}/gost.dylib
 		sudo ln -sf ${E_DIR}/gost.dylib /opt/local/lib/engines-1.1/
-		sudo cp build/bin/gost*sum /opt/local/bin/ 
 	fi
 else
 	echo "OpenSSL-1.1x is not installed on this system"

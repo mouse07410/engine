@@ -49,10 +49,14 @@ O_DIR=/opt/local/libexec/openssl11
 E_DIR=/opt/local/libexec/openssl11/lib/engines-1.1
 THRE="-"
 THREE="${THRE}" OPENSSL_DIR=${O_DIR} ENGINESDIR=${E_DIR} ./gost-build-3.sh 2>&1 | tee ossl111-build.txt
-if [ -r build/bin/gost.dylib ]; then
-	sudo cp build/bin/gost.1.1.dylib ${E_DIR}/
-	sudo ln -sf ${E_DIR}/gost.1.1.dylib ${E_DIR}/gost.dylib
-	sudo ln -sf ${E_DIR}/gost.dylib /opt/local/lib/engines-1.1/
+if [ -d /opt/local/libexec/openssl11 ]; then
+    if [ -r build/bin/gost.dylib ]; then
+	    sudo cp build/bin/gost.1.1.dylib ${E_DIR}/
+	    sudo ln -sf ${E_DIR}/gost.1.1.dylib ${E_DIR}/gost.dylib
+	    sudo ln -sf ${E_DIR}/gost.dylib /opt/local/lib/engines-1.1/
+    fi
+else
+    echo "OpenSSL-1.1.1 is not installed."
 fi
 
 git checkout master

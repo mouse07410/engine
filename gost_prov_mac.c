@@ -139,14 +139,13 @@ static int mac_final(void *mctx, unsigned char *out, size_t *outl,
         return 0;
 
     /* for platforms where sizeof(int) != * sizeof(size_t) */
-    tmpoutl = (unsigned int)*outl;
+    tmpoutl = (unsigned int) *outl;
 
     if (out != NULL) {
         /* We ignore the error for GOST MDs that don't support setting
            the size */
-        EVP_MD_CTX_ctrl(gctx->dctx, EVP_MD_CTRL_XOF_LEN, (int)gctx->mac_size, NULL);
-        ret = EVP_DigestFinal_ex(gctx->dctx, out, &tmpoutl);
-        //EVP_MD_CTX_ctrl(gctx->dctx, EVP_MD_CTRL_XOF_LEN, gctx->mac_size, NULL);
+        EVP_MD_CTX_ctrl(gctx->dctx, EVP_MD_CTRL_XOF_LEN, gctx->mac_size, NULL);
+        ret = EVP_DigestFinalXOF(gctx->dctx, out, &tmpoutl);
         //ret = EVP_DigestFinalXOF(gctx->dctx, out, gctx->mac_size);
     }
     if (outl != NULL)

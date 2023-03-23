@@ -130,7 +130,6 @@ static int mac_final(void *mctx, unsigned char *out, size_t *outl,
                      size_t outsize)
 {
     GOST_CTX *gctx = mctx;
-    unsigned int tmpoutl;
     int ret = 0;
 
     /* This is strange code...  but it duplicates pkey_gost_mac_signctx() */
@@ -138,18 +137,13 @@ static int mac_final(void *mctx, unsigned char *out, size_t *outl,
     if (outl == NULL)
         return 0;
 
-    /* for platforms where sizeof(int) != * sizeof(size_t) */
-    tmpoutl = (unsigned int) *outl;
-
     if (out != NULL) {
         /* We ignore the error for GOST MDs that don't support setting
            the size */
         EVP_MD_CTX_ctrl(gctx->dctx, EVP_MD_CTRL_XOF_LEN, gctx->mac_size, NULL);
-        ret = EVP_DigestFinalXOF(gctx->dctx, out, &tmpoutl);
-        //ret = EVP_DigestFinalXOF(gctx->dctx, out, gctx->mac_size);
+        ret = EVP_DigestFinalXOF(gctx->dctx, out, gctx->mac_size);
     }
-    if (outl != NULL)
-        *outl = (size_t)gctx->mac_size;
+    *outl = (size_t)gctx->mac_size;
 
     return ret;
 }

@@ -10,7 +10,7 @@ if [ "$1" = "pull" ]; then
   git pull
 fi
 
-########## OpenSSL source tree (GitHub master)
+# Build for Dev version of OpenSSL present in source in $HOME/src/openssl
 O_DIR="" 
 E_DIR=""
 P_DIR=""
@@ -28,9 +28,9 @@ else
 	echo ""
 fi
 
+# Build for Macports-installed OpenSSL-3
 rm -rf build
 
-########## OpenSSL-3.x Macports-installed
 # Install as Provider 
 O_DIR="/opt/local/libexec/openssl3" 
 E_DIR="/opt/local/libexec/openssl3/lib/engines-3"
@@ -51,6 +51,13 @@ else
 	echo ""
 fi
 
+# Build for Macports-installed OpenSSL-1.1.1
+git checkout openssl_1_1_1
+if [ "$1" = "pull" ]; then
+  git pull
+fi
+
+rm -rf build
 
 ########## OpenSSL-1.1.1x
 O_DIR=/opt/local/libexec/openssl11

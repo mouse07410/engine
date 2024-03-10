@@ -10,6 +10,7 @@ if [ "$1" = "pull" ]; then
   git pull
 fi
 
+# Build for Dev version of OpenSSL present in source in $HOME/src/openssl
 O_DIR="" 
 E_DIR=""
 P_DIR=""
@@ -22,8 +23,8 @@ if [ -r build/bin/gost.dylib ]; then
 	cp build/bin/gost*sum ${HOME}/openssl-3/bin/
 fi
 
+# Build for Macports-installed OpenSSL-3
 rm -rf build
-
 O_DIR="/opt/local/libexec/openssl3" 
 E_DIR="/opt/local/libexec/openssl3/lib/engines-3"
 P_DIR="/opt/local/libexec/openssl3/lib/ossl-modules" 
@@ -38,6 +39,7 @@ if [ -r build/bin/gost.dylib ]; then
 	sudo cp build/bin/gost*sum /opt/local/bin/
 fi
 
+# Build for Macports-installed OpenSSL-1.1.1
 git checkout openssl_1_1_1
 if [ "$1" = "pull" ]; then
   git pull

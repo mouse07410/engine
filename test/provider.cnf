@@ -2,7 +2,13 @@ openssl_conf = openssl_def
 [openssl_def]
 providers = providers
 [providers]
-gostprov = provider_conf
-default = provider_conf
-[provider_conf]
+gostprov = gost_conf
+default = default_conf
+base = base_conf
+[default_conf]
+activate = 1
+[base_conf]
+activate = 1
+[gost_conf]
+module = build/bin/gostprov.dylib
 activate = 1

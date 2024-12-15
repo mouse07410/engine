@@ -37,7 +37,7 @@ E_DIR="/opt/local/libexec/openssl3/lib/engines-3"
 P_DIR="/opt/local/libexec/openssl3/lib/ossl-modules" 
 THRE="-3m-"
 if [ -d ${O_DIR} ]; then
-	THREE="${THRE}" OPENSSL_DIR=${O_DIR} PROVDIR=${P_DIR} ENGINESDIR=${E_DIR} ./gost-build-3.sh 2>&1 | tee ossl3-build.txt
+	THREE="${THRE}" OPENSSL_DIR=${O_DIR} OPENSSL_ROOT_DIR=${O_DIR} PROVDIR=${P_DIR} ENGINESDIR=${E_DIR} ./gost-build-3.sh 2>&1 | tee ossl3-build.txt
 	if [ -r build/bin/gost.dylib ]; then
 		sudo cp build/bin/gost.dylib ${E_DIR}/gost.3.0.dylib
 		sudo ln -sf ${E_DIR}/gost.3.0.dylib ${E_DIR}/gost.dylib
@@ -51,21 +51,24 @@ else
 	echo ""
 fi
 
-# Build for Macports-installed OpenSSL-1.1.1
-git checkout openssl_1_1_1
-if [ "$1" = "pull" ]; then
-  git pull
-fi
+exit 0 # don't go to OpenSSL-1.1.1 now
 
-rm -rf build
+if [ -d /opt/local/libexec/openssl11 ]; then
+  # Build for Macports-installed OpenSSL-1.1.1
+  git checkout openssl_1_1_1
+  if [ "$1" = "pull" ]; then
+    git pull
+  fi
 
-########## OpenSSL-1.1.1x
-O_DIR=/opt/local/libexec/openssl11
-E_DIR=/opt/local/libexec/openssl11/lib/engines-1.1
-THRE="-"
+  rm -rf build
 
-if [ -d ${O_DIR} ]; then 
-	git checkout openssl_1_1_1
+  ########## OpenSSL-1.1.1x
+  O_DIR=/opt/local/libexec/openssl11
+  E_DIR=/opt/local/libexec/openssl11/lib/engines-1.1
+  THRE="-"
+
+  if [ -d ${O_DIR} ]; then 
+  	git checkout openssl_1_1_1
 	if [ "$1" = "pull" ]; then
 	  git pull
 	fi
@@ -78,9 +81,10 @@ if [ -d ${O_DIR} ]; then
 	    sudo ln -sf ${E_DIR}/gost.1.1.dylib ${E_DIR}/gost.dylib
 	    sudo ln -sf ${E_DIR}/gost.dylib /opt/local/lib/engines-1.1/
 	fi
-else
+  else
 	echo "OpenSSL-1.1x is not installed on this system, skipping..."
 	echo ""
-fi
+  fi
 
-git checkout master
+  git checkout master
+fi

@@ -263,12 +263,13 @@ int omac_imit_ctrl(EVP_MD_CTX *ctx, int type, int arg, void *ptr)
                 int ret = 0;
                 if (gost_tlstree(OBJ_txt2nid(c->cipher_name),
                                  c->key, diversed_key,
-                                 (const unsigned char *)ptr)) {
+                                 (const unsigned char *)ptr, TLSTREE_MODE_NONE)) {
                     EVP_CIPHER *cipher;
                     if ((cipher = (EVP_CIPHER *)EVP_get_cipherbyname(c->cipher_name))
                         || (cipher = EVP_CIPHER_fetch(NULL, c->cipher_name, NULL)))
                         ret = omac_key(c, cipher, diversed_key, 32);
                     EVP_CIPHER_free(cipher);
+                    OPENSSL_cleanse(diversed_key, sizeof(diversed_key));
                 }
                 return ret;
             }

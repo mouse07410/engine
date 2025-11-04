@@ -519,6 +519,7 @@ static int magma_cipher_init(EVP_CIPHER_CTX *ctx, const unsigned char *key,
        c->key_meshing = 0;
     }
 
+    c->count = 0;
     return 1;
 }
 
@@ -529,6 +530,7 @@ static int magma_cipher_init_ctr_acpkm_omac(EVP_CIPHER_CTX *ctx, const unsigned 
 	if (key) {
     struct ossl_gost_cipher_ctx *c = EVP_CIPHER_CTX_get_cipher_data(ctx);
 		unsigned char cipher_key[32];
+        int ret;
 		c->omac_ctx = EVP_MD_CTX_new();
 
 		if (c->omac_ctx == NULL) {
@@ -543,7 +545,9 @@ static int magma_cipher_init_ctr_acpkm_omac(EVP_CIPHER_CTX *ctx, const unsigned 
 		    return 0;
 		}
 
-		return magma_cipher_init(ctx, cipher_key, iv, enc);
+		ret = magma_cipher_init(ctx, cipher_key, iv, enc);
+        OPENSSL_cleanse(cipher_key, sizeof(cipher_key));
+        return ret;
 	}
 
 	return magma_cipher_init(ctx, key, iv, enc);
@@ -626,6 +630,7 @@ static int gost_magma_cipher_init_mgm(EVP_CIPHER_CTX *ctx, const unsigned char *
         if (!gost_cipher_set_param(&mctx->ks.g_ks, NID_id_tc26_gost_28147_param_Z))
             return 0;
         magma_key(&(mctx->ks.g_ks.cctx), key);
+        magma_master_key(&(mctx->ks.g_ks.cctx), key);
         gost_mgm128_init(&mctx->mgm, &mctx->ks,
                          (block128_f) gost_magma_encrypt_wrap, gf64_mul, bl);
 
@@ -1105,6 +1110,7 @@ static int gost_magma_mgm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
         mctx->ivlen = ivlen;
         mctx->iv = iv;
         mctx->taglen = -1;
+        mctx->tlstree_mode = TLSTREE_MODE_NONE;
         return 1;
 
     case EVP_CTRL_GET_IVLEN:
@@ -1142,6 +1148,30 @@ static int gost_magma_mgm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
             return 0;
         }
         memcpy(ptr, buf, arg);
+        return 1;
+
+    case EVP_CTRL_SET_TLSTREE_PARAMS:
+        if (strcmp((char *)ptr, "strong") == 0)
+            mctx->tlstree_mode = TLSTREE_MODE_S;
+        else if (strcmp((char *)ptr, "light") == 0)
+            mctx->tlstree_mode = TLSTREE_MODE_L;
+        else {
+            // TODO: set err
+            return 0;
+        }
+        return 1;
+
+    case EVP_CTRL_TLSTREE:
+        {
+            unsigned char newkey[32];
+            if (gost_tlstree(NID_magma_mgm,
+                    (const unsigned char *)mctx->ks.g_ks.cctx.master_key,
+                    newkey, (const unsigned char *)ptr, mctx->tlstree_mode)
+                  > 0) {
+                magma_key(&mctx->ks.g_ks.cctx, newkey);
+                OPENSSL_cleanse(newkey, sizeof(newkey));
+            }
+        }
         return 1;
 
     default:
@@ -1273,10 +1303,6 @@ static int magma_cipher_ctl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
                 return -1;
             }
 
-            if (c->count != 0) {
-                return -1;
-            }
-
             c->key_meshing = arg;
             return 1;
         }
@@ -1311,7 +1337,7 @@ static int magma_cipher_ctl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
             }
 
             if (gost_tlstree(NID_magma_cbc, (const unsigned char *)c->master_key, newkey,
-                             (const unsigned char *)seq) > 0) {
+                             (const unsigned char *)seq, TLSTREE_MODE_NONE) > 0) {
                 memset(adjusted_iv, 0, 8);
                 memcpy(adjusted_iv, EVP_CIPHER_CTX_original_iv(ctx), 4);
                 for (j = 3, carry = 0; j >= 0; j--)
@@ -1324,6 +1350,7 @@ static int magma_cipher_ctl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
                 memcpy(EVP_CIPHER_CTX_iv_noconst(ctx), adjusted_iv, 8);
 
                 magma_key(c, newkey);
+                OPENSSL_cleanse(newkey, sizeof(newkey));
                 return 1;
           }
         }
@@ -1649,5 +1676,11 @@ static int gost_imit_cleanup(EVP_MD_CTX *ctx)
 {
     memset(EVP_MD_CTX_md_data(ctx), 0, sizeof(struct ossl_gost_imit_ctx));
     return 1;
+}
+
+/* Called directly by CMAC_ACPKM_Init() */
+const EVP_CIPHER *cipher_gost_magma_ctracpkm()
+{
+    return GOST_init_cipher(&magma_ctr_acpkm_cipher);
 }
 /* vim: set expandtab cinoptions=\:0,l1,t0,g0,(0 sw=4 : */

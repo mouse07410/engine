@@ -19,7 +19,7 @@ if [ -z ${OPENSSL_DIR} ]; then
     # Assume we are building for OpenSSL-4 (current master)
     LDFLAGS="" 
     OPENSSL_DIR="$HOME/openssl-4"
-    THREE="-3-"
+    THREE="-4-"
 fi
 
 if [ -z ${ENGINESDIR} ]; then
@@ -30,6 +30,11 @@ OPENSSL_ENGINES_DIR=${ENGINESDIR}
 
 if [ -z ${CC} ]; then
     CC="clang"
+fi
+
+# Did we explicitly ask to build the engine?
+if [ "z${ENG}" = "z" || "${ENG}" = "OFF" ]; then
+    GOST_ENG="-DGOST_ENGINE_ENABLE=OFF"
 fi
 
 export OPENSSL_ROOT_DIR=${OPENSSL_DIR}
@@ -65,7 +70,7 @@ mkdir -p build
 
 cd build
 
-cmake .. -DCMAKE_C_COMPILER=${CC} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR} -DOPENSSL_ENGINES_DIR=${OPENSSL_ENGINES_DIR} 2>&1 | tee ../cmake${THREE}out.txt
+cmake .. -DCMAKE_C_COMPILER=${CC} ${GOST_ENG} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR} -DOPENSSL_ENGINES_DIR=${OPENSSL_ENGINES_DIR} 2>&1 | tee ../cmake${THREE}out.txt
 make VERBOSE=1 2>&1 | tee ../make${THREE}out.txt
 
 make test 2>&1 | tee ../test${THREE}out.txt

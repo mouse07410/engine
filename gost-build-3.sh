@@ -16,14 +16,14 @@
 # 
 
 if [ -z ${OPENSSL_DIR} ]; then
-    # Assume we are building for OpenSSL-3 (current master)
+    # Assume we are building for OpenSSL-4 (current master)
     LDFLAGS="" 
-    OPENSSL_DIR="$HOME/openssl-3"
+    OPENSSL_DIR="$HOME/openssl-4"
     THREE="-3-"
 fi
 
 if [ -z ${ENGINESDIR} ]; then
-    ENGINESDIR="${OPENSSL_DIR}/lib/engines-3"
+    ENGINESDIR="${OPENSSL_DIR}/lib/engines-4"
 fi
 
 OPENSSL_ENGINES_DIR=${ENGINESDIR}
@@ -50,11 +50,15 @@ OPENSSL_CFLAGS="-march=native -std=gnu17"
 OPENSSL_LIB_DIR="${OPENSSL_DIR}/lib"
 OPENSSL_CONF="${OPENSSL_DIR}/etc/openssl/openssl.cnf"
 
+CFLAGS="${CFLAGS} -g"
+
 echo ""
 echo "OPENSSL_DIR=\"${OPENSSL_DIR}\""
 echo "ENGINESDIR=\"${ENGINESDIR}\""
 echo "OPENSSL_ROOT_DIR=\"${OPENSSL_ROOT_DIR}\""
 echo ""
+
+sudo chown -R ur20980 *
 
 rm -rf build
 mkdir -p build
@@ -66,5 +70,7 @@ make VERBOSE=1 2>&1 | tee ../make${THREE}out.txt
 
 make test 2>&1 | tee ../test${THREE}out.txt
 make test ARGS='-V' 2>&1 | tee ../test${THREE}long-out.txt
+
+sudo chown -R ur20980 *
 
 #

@@ -4,10 +4,7 @@ providers = providers
 [providers]
 gostprov = gost_conf
 default = default_conf
-base = base_conf
 [default_conf]
-activate = 1
-[base_conf]
 activate = 1
 [gost_conf]
 module = build/bin/gostprov.dylib

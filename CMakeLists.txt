@@ -32,6 +32,7 @@ if(NOT GOST_ENGINE_ENABLE AND NOT GOST_PROVIDER_ENABLE)
   message(FATAL_ERROR "At least one of GOST_ENGINE_ENABLE or GOST_PROVIDER_ENABLE must be ON")
 endif()
 
+
 message(STATUS "GOST Engine build: ${GOST_ENGINE_ENABLE}")
 message(STATUS "GOST Provider build: ${GOST_PROVIDER_ENABLE}")
 
@@ -99,6 +100,10 @@ endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(SKIP_PERL_TESTS 1)
+endif()
+
+if(NOT GOST_ENGINE_ENABLE)
+  set(CMAKE_C_FLAGS "-DOPENSSL_NO_ENGINE=1 ${CMAKE_C_FLAGS}")
 endif()
 
 set(CMAKE_C_STANDARD 90)
